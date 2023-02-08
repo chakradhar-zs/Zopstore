@@ -13,7 +13,7 @@ func TestGreet(t *testing.T) {
 	for _, c := range tests {
 		got := greet(c.in)
 		if got != c.want {
-			t.Errorf("greet(%q) == %q, want %q", c.in, got, c.want)
+			t.Errorf("02-greet(%q) == %q, want %q", c.in, got, c.want)
 		}
 	}
 }

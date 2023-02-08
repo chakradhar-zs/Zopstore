@@ -14,7 +14,7 @@ func TestDouble(t *testing.T) {
 	for _, c := range tests {
 		got := double(c.in)
 		if got != c.want {
-			t.Errorf("double(%d) == %d, want %d", c.in, got, c.want)
+			t.Errorf("01-double(%d) == %d, want %d", c.in, got, c.want)
 		}
 	}
 }
