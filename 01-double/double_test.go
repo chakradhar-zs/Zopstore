@@ -11,10 +11,11 @@ func TestDouble(t *testing.T) {
 		{0, 0},
 		{5, 10},
 	}
-	for _, c := range tests {
-		got := double(c.in)
-		if got != c.want {
-			t.Errorf("01-double(%d) == %d, want %d", c.in, got, c.want)
+
+	for _, tc := range tests {
+		got := double(tc.in)
+		if got != tc.want {
+			t.Errorf("01-double(%d) == %d, want %d", tc.in, got, tc.want)
 		}
 	}
 }

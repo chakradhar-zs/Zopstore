@@ -15,9 +15,10 @@ func TestReverse(t *testing.T) {
 		{[]int{1}, []int{1}},
 		{[]int{}, []int{}},
 	}
-	for _, c := range tests {
-		reverse(c.s)
 
-		assert.Equal(t, c.want, c.s)
+	for _, tc := range tests {
+		reverse(tc.s)
+
+		assert.Equal(t, tc.want, tc.s)
 	}
 }

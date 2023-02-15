@@ -14,10 +14,11 @@ func TestSum(t *testing.T) {
 		{3, 6},
 		{4, 10},
 	}
-	for _, c := range tests {
-		got := Sum(c.n)
-		if got != c.want {
-			t.Errorf("Sum(%d) == %d, want %d", c.n, got, c.want)
+
+	for _, tc := range tests {
+		got := Sum(tc.n)
+		if got != tc.want {
+			t.Errorf("Sum(%d) == %d, want %d", tc.n, got, tc.want)
 		}
 	}
 }

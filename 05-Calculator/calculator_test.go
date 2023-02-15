@@ -16,10 +16,11 @@ func TestCalculator(t *testing.T) {
 		{"*", 2, 3, 6},
 		{"/", 6, 3, 2},
 	}
-	for _, c := range tests {
-		got := calculator(c.op, c.a, c.b)
-		if got != c.want {
-			t.Errorf("calculator(%s, %f, %f) == %f, want %f", c.op, c.a, c.b, got, c.want)
+
+	for _, tc := range tests {
+		got := calculator(tc.op, tc.a, tc.b)
+		if got != tc.want {
+			t.Errorf("calculator(%s, %f, %f) == %f, want %f", tc.op, tc.a, tc.b, got, tc.want)
 		}
 	}
 }

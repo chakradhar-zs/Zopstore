@@ -13,10 +13,11 @@ func TestIsEven(t *testing.T) {
 		{3, false},
 		{0, true},
 	}
-	for _, c := range tests {
-		got := isEven(c.in)
-		if got != c.want {
-			t.Errorf("isEven(%d) == %t, want %t", c.in, got, c.want)
+
+	for _, tc := range tests {
+		got := isEven(tc.in)
+		if got != tc.want {
+			t.Errorf("isEven(%d) == %t, want %t", tc.in, got, tc.want)
 		}
 	}
 }

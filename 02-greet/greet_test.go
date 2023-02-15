@@ -10,10 +10,11 @@ func TestGreet(t *testing.T) {
 		{"Jane", "Hello, Jane!"},
 		{"Bob", "Hello, Bob!"},
 	}
-	for _, c := range tests {
-		got := greet(c.in)
-		if got != c.want {
-			t.Errorf("02-greet(%q) == %q, want %q", c.in, got, c.want)
+
+	for _, tc := range tests {
+		got := greet(tc.in)
+		if got != tc.want {
+			t.Errorf("02-greet(%q) == %q, want %q", tc.in, got, tc.want)
 		}
 	}
 }
