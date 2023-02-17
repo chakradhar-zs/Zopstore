@@ -23,6 +23,7 @@ jobs:
         run: |
           export GOFR_ENV=test
           mkdir build
+          cd Day-1
           go test ./... -short -v -coverprofile build/coverage.txt -coverpkg=./...
           cat build/coverage.txt | grep -v '.pb.go' > build/coverage.out
           go tool cover -func build/coverage.out
