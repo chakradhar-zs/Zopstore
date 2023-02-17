@@ -1,20 +1,10 @@
 name: Workflow-Pipeline
-"on":
-  push:
-    branches:
-      - "*"
+"on": push
 
 jobs:
   setup:
     name: Setup
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0.30
-        ports:
-          - "3306:3306"
-        env:
-          MYSQL_ROOT_PASSWORD: "password"
     steps:
       - name: Set up  Go 1.19
         uses: actions/setup-go@v2
