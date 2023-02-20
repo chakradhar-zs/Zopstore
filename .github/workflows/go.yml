@@ -6,6 +6,17 @@ jobs:
     name: Setup
     runs-on: ubuntu-latest
     steps:
+      - name: Get branch prefix
+        id: get_branch_prefix
+        run: echo "::set-output name=prefix::$(echo $GITHUB_REF | sed 's/refs\/heads\///' | cut -d/ -f1)"
+
+      - name: Set environment variable
+        run: echo "BRANCH_PREFIX=${{ steps.get_branch_prefix.outputs.prefix }}" >> $GITHUB_ENV
+      
+      - name: Checks the branch prefix
+        if: "!contains(env.BRANCH_PREFIX,'Day')"
+        run: echo "Branch name does not contain 'Day' in its prefix"
+        
       - name: Set up  Go 1.19
         uses: actions/setup-go@v2
         with:
@@ -20,16 +31,6 @@ jobs:
           go get -v -t -d ./...
 
       - name: Test
-        run: |    
-          cd Day-2
+        run: |
+          cd $BRANCH_PREFIX
           go test ./...
-
-#      - name: Setup linter
-#        run: |
-#          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
-#          golangci-lint --version
-#
-#      - name: Code quality
-#        run: |
-#          golangci-lint run --timeout 5m0s
-
