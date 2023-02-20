@@ -21,7 +21,7 @@ jobs:
 
       - name: Test
         run: |    
-          cd Day-1
+          cd Day-2
           go test ./...
 
 #      - name: Setup linter
