@@ -18,7 +18,9 @@ import (
 // The response should be a JSON object with the same fields as the request body.
 
 // If the request body is missing any of the required fields or if the fields are not in the correct format,
-// the program should return a 400 Bad Request status code
+// the program should return a 400 Bad Request status code.
+
+// If the request method is POST set the status code to 405.
 
 // name the entity as Product and handler as ProductHandler
 
