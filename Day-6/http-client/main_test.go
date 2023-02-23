@@ -39,10 +39,7 @@ func TestGetRespBody(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		actual, err := getRespBody(tc.url)
-		if err != nil && err.Error() != tc.expectedErr.Error() {
-			t.Errorf("expected error: %v, but got: %v", tc.expectedErr, err)
-		}
+		actual := getRespBody(tc.url)
 
 		assert.Equal(t, tc.expected, actual)
 	}

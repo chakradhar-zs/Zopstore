@@ -10,7 +10,48 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestProductHandler(t *testing.T) {
+func TestGetAllProductsHandler(t *testing.T) {
+	products = []Product{
+		{Id: 1, Name: "Product 1", Description: "Description 1", Price: 1.99},
+		{Id: 2, Name: "Product 2", Description: "Description 2", Price: 2.99},
+		{Id: 3, Name: "Product 3", Description: "Description 3", Price: 3.99},
+	}
+
+	body, _ := json.Marshal(products)
+
+	tests := []struct {
+		desc           string
+		expectedStatus int
+		expectedBody   string
+		method         string
+	}{
+		{
+			desc:           "Success",
+			expectedStatus: http.StatusOK,
+			expectedBody:   string(body),
+			method:         http.MethodGet,
+		},
+		{
+			desc:           "Error case: invalid-method",
+			expectedStatus: http.StatusMethodNotAllowed,
+			expectedBody:   "",
+			method:         http.MethodPut,
+		},
+	}
+
+	for i, tc := range tests {
+		req := httptest.NewRequest(http.MethodGet, "/products", nil)
+		rec := httptest.NewRecorder()
+
+		GetProducts(rec, req)
+
+		assert.Equal(t, tc.expectedStatus, rec.Code, "TEST[%d], failed.\n%s", i, tc.desc)
+
+		assert.Equal(t, tc.expectedBody, rec.Body.String(), "TEST[%d], failed.\n%s", i, tc.desc)
+	}
+}
+
+func TestCreateProduct(t *testing.T) {
 	successCase := Product{Id: 1, Name: "Product 1", Description: "This is product 1", Price: 10.99}
 	invalidBody := map[string]interface{}{"id": "1"}
 
@@ -37,7 +78,7 @@ func TestProductHandler(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		ProductHandler(w, r)
+		CreateProduct(w, r)
 
 		assert.Equalf(t, tc.expStatuscode, w.Code, "status code mismatch")
 
