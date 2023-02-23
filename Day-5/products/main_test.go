@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -11,25 +10,17 @@ import (
 )
 
 func TestProductHandler(t *testing.T) {
-	successCase := Product{Id: 1, Name: "Product 1", Description: "This is product 1", Price: 10.99}
-	invalidBody := map[string]interface{}{"id": "1"}
-
 	tests := []struct {
 		desc          string
 		method        string
-		reqBody       interface{}
 		expStatuscode int
-		expResp       Product
 	}{
-		{"success case", http.MethodPost, successCase, http.StatusCreated, successCase},
-		{"error case: 405", http.MethodDelete, successCase, http.StatusMethodNotAllowed, Product{}},
-		{"error case: 400", http.MethodPost, invalidBody, http.StatusBadRequest, Product{}},
+		{"success case", http.MethodGet, http.StatusOK},
+		{"error case: 405", http.MethodDelete, http.StatusMethodNotAllowed},
 	}
 
-	for i, tc := range tests {
-		body, _ := json.Marshal(tc.reqBody)
-
-		r, err := http.NewRequest(tc.method, "/products", bytes.NewBuffer(body))
+	for _, tc := range tests {
+		r, err := http.NewRequest(tc.method, "/products", nil)
 		if err != nil {
 			t.Errorf("could not create request: %v", err)
 			continue
@@ -41,11 +32,13 @@ func TestProductHandler(t *testing.T) {
 
 		assert.Equalf(t, tc.expStatuscode, w.Code, "status code mismatch")
 
-		var p Product
+		if w.Code == http.StatusOK {
+			var p []Product
 
-		_ = json.Unmarshal(w.Body.Bytes(), &p)
-
-		assert.Equalf(t, tc.expResp, p, "Test[%d]. Handler returned unexpected body: got %v want %v",
-			i, p, tc.expResp)
+			err := json.Unmarshal(w.Body.Bytes(), &p)
+			if err != nil {
+				t.Errorf("invalid format of body")
+			}
+		}
 	}
 }
