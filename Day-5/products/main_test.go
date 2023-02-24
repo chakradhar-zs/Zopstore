@@ -32,13 +32,13 @@ func TestProductHandler(t *testing.T) {
 
 		assert.Equalf(t, tc.expStatuscode, w.Code, "status code mismatch")
 
-        if w.Code==http.StatusOK{
-            var p []Product
+		if w.Code == http.StatusOK {
+			var p []Product
 
-            err := json.Unmarshal(w.Body.Bytes(), &p)
-            if err != nil {
-                t.Errorf("invalid format of body")
-            }
-        }
+			err := json.Unmarshal(w.Body.Bytes(), &p)
+			if err != nil {
+				t.Errorf("invalid format of body")
+			}
+		}
 	}
 }
