@@ -40,7 +40,7 @@ func TestGetAllProductsHandler(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		req := httptest.NewRequest(http.MethodGet, "/products", nil)
+		req := httptest.NewRequest(tc.method, "/products", nil)
 		rec := httptest.NewRecorder()
 
 		GetProducts(rec, req)
