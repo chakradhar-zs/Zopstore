@@ -1,5 +1,5 @@
 
-Implement a RESTful API for managing product data in memory using Go. The API should allow clients to **create**, **retrieve** and **update** products using HTTP requests to the `/products` endpoint. 
+Implement a RESTful API for managing product data in memory using Go. The API should allow clients to **create** and **retrieve** products using HTTP requests to the `/products` endpoint. 
 The product data should be stored in a slice of `Product` structs in memory.
 
 ### Requirements
