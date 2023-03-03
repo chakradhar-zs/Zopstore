@@ -1,10 +1,26 @@
 name: Workflow-Pipeline
 "on": push
 
+env:
+  DB_NAME: zopstore
+  DB_PASSWORD: password
+  DB_USER: root
+
 jobs:
   setup:
     name: Setup
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: ${{ env.DB_NAME }}
+          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+
     steps:
       - name: Get branch prefix
         id: get_branch_prefix
@@ -12,11 +28,11 @@ jobs:
 
       - name: Set environment variable
         run: echo "BRANCH_PREFIX=${{ steps.get_branch_prefix.outputs.prefix }}" >> $GITHUB_ENV
-      
+
       - name: Checks the branch prefix
         if: "!contains(env.BRANCH_PREFIX,'Day')"
         run: echo "Branch name does not contain 'Day' in its prefix"
-        
+
       - name: Set up  Go 1.19
         uses: actions/setup-go@v2
         with:
@@ -26,11 +42,14 @@ jobs:
       - name: Checkout code into go module directory
         uses: actions/checkout@v2
 
+
       - name: Get dependencies
         run: |
           go get -v -t -d ./...
 
-      - name: Test
+
+      - name: Load and Test
         run: |
           cd $BRANCH_PREFIX
+          mysql -u$DB_USER -p$DB_PASSWORD -h 127.0.0.1 < setup.sql
           go test ./...
