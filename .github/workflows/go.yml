@@ -47,9 +47,11 @@ jobs:
         run: |
           go get -v -t -d ./...
 
+      - name: Load DB schema
+        run: |
+          mysql -u$DB_USER -p$DB_PASSWORD -h 127.0.0.1 < db/setup.sql
 
-      - name: Load and Test
+      - name: Test
         run: |
           cd $BRANCH_PREFIX
-          mysql -u$DB_USER -p$DB_PASSWORD -h 127.0.0.1 < setup.sql
           go test ./...
