@@ -54,4 +54,5 @@ jobs:
       - name: Test
         run: |
           cd $BRANCH_PREFIX
-          go test ./...
+          go test ./... -v -coverprofile ./coverage.txt -coverpkg=./...
+          go tool cover -func ./coverage.txt
