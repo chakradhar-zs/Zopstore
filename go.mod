@@ -1,4 +1,4 @@
-module github.com/vaishnav-zopsmart/assignment-questions
+module Zopstore
 
 go 1.19
 
