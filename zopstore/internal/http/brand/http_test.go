@@ -15,8 +15,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"zopstore/internal/models"
-	"zopstore/internal/service"
+	"Day-19/internal/models"
+	"Day-19/internal/service"
 )
 
 func TestRead(t *testing.T) {

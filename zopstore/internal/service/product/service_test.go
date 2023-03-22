@@ -13,8 +13,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"zopstore/internal/models"
-	"zopstore/internal/store"
+	"Day-19/internal/models"
+	"Day-19/internal/store"
 )
 
 func TestGetProduct(t *testing.T) {
@@ -48,11 +48,11 @@ func TestGetProduct(t *testing.T) {
 		{desc: "Fail",
 			input:  333,
 			input2: "true",
-			output: nil,
+			output: models.Product{},
 			expErr: errors.EntityNotFound{},
 			calls: []*gomock.Call{
 				storeMock.EXPECT().Get(gomock.AssignableToTypeOf(&gofr.Context{}), 333, "true").
-					Return(nil, errors.EntityNotFound{}),
+					Return(models.Product{}, errors.EntityNotFound{}),
 			}},
 	}
 
@@ -307,11 +307,11 @@ func TestGetAllProducts(t *testing.T) {
 		{desc: "Fail",
 			path:   "/product/?brand=true",
 			input:  "true",
-			output: nil,
+			output: []models.Product{},
 			expErr: errors.EntityNotFound{},
 			calls: []*gomock.Call{
 				storeMock.EXPECT().GetAll(gomock.AssignableToTypeOf(&gofr.Context{}), "true").
-					Return(nil, errors.EntityNotFound{}),
+					Return([]models.Product{}, errors.EntityNotFound{}),
 			}},
 	}
 
@@ -324,6 +324,61 @@ func TestGetAllProducts(t *testing.T) {
 		ctx := gofr.NewContext(res, req, app)
 		s := New(storeMock)
 		out, err := s.GetAllProducts(ctx, val.input)
+		assert.Equalf(t, val.output, out, "TEST[%d], failed.\n%s", i, val.desc)
+		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
+	}
+}
+
+func TestGetProductByNAme(t *testing.T) {
+	app := gofr.New()
+	ctrl := gomock.NewController(t)
+
+	defer ctrl.Finish()
+	storeMock := store.NewMockProductStorer(ctrl)
+	tests := []struct {
+		desc   string
+		path   string
+		input1 string
+		input2 string
+		output interface{}
+		expErr error
+		calls  []*gomock.Call
+	}{
+		{desc: "Success",
+			path:   "/product/?brand=true",
+			input1: "zs_sneaker shoes",
+			input2: "true",
+			output: []models.Product{{
+				ID: 3, Name: "zs_sneaker shoes", Description: "stylish", Price: 1000, Quantity: 3, Category: "shoes",
+				Brand: models.Brand{ID: 4, Name: "Nike"}, Status: "Available"}},
+			expErr: nil,
+			calls: []*gomock.Call{
+				storeMock.EXPECT().GetByName(gomock.AssignableToTypeOf(&gofr.Context{}), "zs_sneaker shoes", "true").
+					Return([]models.Product{{
+						ID: 3, Name: "zs_sneaker shoes", Description: "stylish", Price: 1000, Quantity: 3, Category: "shoes",
+						Brand: models.Brand{ID: 4, Name: "Nike"}, Status: "Available"}}, nil),
+			}},
+		{desc: "Fail",
+			path:   "/product/?brand=true",
+			input1: "",
+			input2: "true",
+			output: []models.Product{},
+			expErr: errors.EntityNotFound{},
+			calls: []*gomock.Call{
+				storeMock.EXPECT().GetByName(gomock.AssignableToTypeOf(&gofr.Context{}), "", "true").
+					Return([]models.Product{}, errors.EntityNotFound{}),
+			}},
+	}
+
+	for i, val := range tests {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest(http.MethodGet, val.path, nil)
+
+		req := request.NewHTTPRequest(r)
+		res := responder.NewContextualResponder(w, r)
+		ctx := gofr.NewContext(res, req, app)
+		s := New(storeMock)
+		out, err := s.GetProductByNAme(ctx, val.input1, val.input2)
 		assert.Equalf(t, val.output, out, "TEST[%d], failed.\n%s", i, val.desc)
 		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
 	}

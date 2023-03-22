@@ -6,7 +6,7 @@ import (
 	"developer.zopsmart.com/go/gofr/pkg/errors"
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
-	"zopstore/internal/models"
+	"Day-19/internal/models"
 )
 
 type Store struct {
@@ -16,7 +16,9 @@ func New() *Store {
 	return &Store{}
 }
 
-func (s *Store) Get(ctx *gofr.Context, id int, brand string) (interface{}, error) {
+const val = "true"
+
+func (s *Store) Get(ctx *gofr.Context, id int, brand string) (models.Product, error) {
 	var p models.Product
 
 	resp := ctx.DB().QueryRowContext(ctx, "select id,name,description,price,quantity,category,brand_id,status from products where id=?", id)
@@ -27,12 +29,37 @@ func (s *Store) Get(ctx *gofr.Context, id int, brand string) (interface{}, error
 		return models.Product{}, errors.EntityNotFound{}
 	}
 
-	if brand == "true" {
+	if brand == val {
 		res := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", p.Brand.ID)
 		_ = res.Scan(&p.Brand.Name)
 	}
 
 	return p, nil
+}
+
+func (s *Store) GetByName(ctx *gofr.Context, name, brand string) ([]models.Product, error) {
+	res := []models.Product{}
+
+	resp, _ := ctx.DB().QueryContext(ctx,
+		"select id,name,description,price,quantity,category,brand_id,status from products where name=?",
+		name)
+	if resp == nil {
+		return []models.Product{{}}, errors.EntityNotFound{}
+	}
+
+	for resp.Next() {
+		var p models.Product
+		_ = resp.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Quantity, &p.Category, &p.Brand.ID, &p.Status)
+
+		if brand == val {
+			res := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", p.Brand.ID)
+			_ = res.Scan(&p.Brand.Name)
+		}
+
+		res = append(res, p)
+	}
+
+	return res, nil
 }
 
 func (s *Store) Create(ctx *gofr.Context, prod *models.Product) (interface{}, error) {
@@ -76,8 +103,6 @@ func (s *Store) Del(ctx *gofr.Context, id int) (interface{}, error) {
 
 func (s *Store) GetAll(ctx *gofr.Context, brand string) ([]models.Product, error) {
 	res := []models.Product{}
-
-	const val = "true"
 
 	resp, err := ctx.DB().QueryContext(ctx, "select * from products")
 

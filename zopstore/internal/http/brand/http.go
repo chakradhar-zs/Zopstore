@@ -6,8 +6,8 @@ import (
 	"developer.zopsmart.com/go/gofr/pkg/errors"
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
-	"zopstore/internal/models"
-	"zopstore/internal/service"
+	"Day-19/internal/models"
+	"Day-19/internal/service"
 )
 
 type Handler struct {

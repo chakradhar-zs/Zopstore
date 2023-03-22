@@ -2,6 +2,7 @@ package product
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -16,8 +17,9 @@ import (
 	"github.com/bmizerany/assert"
 	"github.com/golang/mock/gomock"
 
-	"zopstore/internal/models"
-	"zopstore/internal/service"
+	"Day-19/internal/constants"
+	"Day-19/internal/models"
+	"Day-19/internal/service"
 )
 
 func initTest(path string) *gofr.Context {
@@ -155,14 +157,21 @@ func TestWrite(t *testing.T) {
 
 	defer ctrl.Finish()
 	serviceMock := service.NewMockProduct(ctrl)
+
+	product1 := models.Product{
+		ID: 6, Name: "zs_maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+		Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}
+
 	tests := []struct {
 		desc   string
+		org    string
 		input  interface{}
 		output interface{}
 		expErr error
 		calls  []*gomock.Call
 	}{
 		{desc: "Success",
+			org: "zs",
 			input: models.Product{
 				ID:          6,
 				Name:        "maggi",
@@ -177,12 +186,12 @@ func TestWrite(t *testing.T) {
 			expErr: nil,
 			calls: []*gomock.Call{
 				serviceMock.EXPECT().
-					CreateProduct(gomock.AssignableToTypeOf(&gofr.Context{}), &models.Product{
-						ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
-						Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}).
+					CreateProduct(gomock.AssignableToTypeOf(&gofr.Context{}), &product1).
 					Return(1, nil),
 			}},
-		{desc: "Fail", input: models.Product{},
+		{desc: "Fail",
+			org:    "",
+			input:  models.Product{},
 			output: 0,
 			expErr: errors.MissingParam{Param: []string{"body"}},
 			calls: []*gomock.Call{
@@ -193,14 +202,15 @@ func TestWrite(t *testing.T) {
 
 	for i, val := range tests {
 		body, _ := json.Marshal(val.input)
-		w := httptest.NewRecorder()
+		ctx := context.WithValue(context.Background(), constants.CtxValue, val.org)
 		r := httptest.NewRequest(http.MethodGet, "/", bytes.NewReader(body))
+		r = r.WithContext(ctx)
 		req := request.NewHTTPRequest(r)
-		res := responder.NewContextualResponder(w, r)
-		ctx := gofr.NewContext(res, req, app)
+		c := gofr.NewContext(nil, req, app)
+		c.Context = r.Context()
 
 		h := New(serviceMock)
-		out, err := h.Create(ctx)
+		out, err := h.Create(c)
 		fmt.Println(err)
 		assert.Equalf(t, val.output, out, "TEST[%d], failed.\n%s", i, val.desc)
 		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
@@ -352,12 +362,16 @@ func TestIndex(t *testing.T) {
 	serviceMock := service.NewMockProduct(ctrl)
 	tests := []struct {
 		desc   string
+		org    string
+		name   string
 		path   string
 		output interface{}
 		expErr error
 		calls  []*gomock.Call
 	}{
 		{desc: "Success",
+			org:  "zs",
+			name: "sneaker shoes",
 			path: "/product/?brand=true",
 			output: []models.Product{{
 				ID:          3,
@@ -370,12 +384,14 @@ func TestIndex(t *testing.T) {
 				Status:      "Available"}},
 			expErr: nil,
 			calls: []*gomock.Call{
-				serviceMock.EXPECT().GetAllProducts(gomock.AssignableToTypeOf(&gofr.Context{}), "true").
+				serviceMock.EXPECT().GetProductByNAme(gomock.AssignableToTypeOf(&gofr.Context{}), "zs_sneaker shoes", "true").
 					Return([]models.Product{{
-						ID: 3, Name: "sneaker shoes", Description: "stylish", Price: 1000, Quantity: 3, Category: "shoes",
+						ID: 3, Name: "zs_sneaker shoes", Description: "stylish", Price: 1000, Quantity: 3, Category: "shoes",
 						Brand: models.Brand{ID: 4, Name: "Nike"}, Status: "Available"}}, nil),
 			}},
 		{desc: "Fail",
+			org:    "",
+			name:   "",
 			path:   "/product/?brand=true",
 			output: nil,
 			expErr: errors.EntityNotFound{},
@@ -383,17 +399,34 @@ func TestIndex(t *testing.T) {
 				serviceMock.EXPECT().GetAllProducts(gomock.AssignableToTypeOf(&gofr.Context{}), "true").
 					Return(nil, errors.EntityNotFound{}),
 			}},
+		{desc: "Success",
+			org:  "",
+			name: "",
+			path: "/product/?brand=true",
+			output: []models.Product{{
+				ID: 6, Name: "zs_coffee", Description: "tasty", Price: 100, Quantity: 5, Category: "bru",
+				Brand: models.Brand{ID: 5, Name: "bru"}, Status: "Available",
+			}},
+			expErr: nil,
+			calls: []*gomock.Call{
+				serviceMock.EXPECT().GetAllProducts(gomock.AssignableToTypeOf(&gofr.Context{}), "true").
+					Return([]models.Product{{
+						ID: 6, Name: "zs_coffee", Description: "tasty", Price: 100, Quantity: 5, Category: "bru",
+						Brand: models.Brand{ID: 5, Name: "bru"}, Status: "Available",
+					}}, nil),
+			}},
 	}
 
 	for i, val := range tests {
-		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, val.path, nil)
+		path := val.path + "&organization=" + val.org + "&name=" + val.name
+		r, _ := http.NewRequest(http.MethodGet, path, http.NoBody)
+		ctx := context.WithValue(context.Background(), constants.CtxValue, val.org)
+		r = r.WithContext(ctx)
 		req := request.NewHTTPRequest(r)
-		res := responder.NewContextualResponder(w, r)
-		ctx := gofr.NewContext(res, req, app)
+		c := gofr.NewContext(nil, req, app)
 
 		h := New(serviceMock)
-		out, err := h.Index(ctx)
+		out, err := h.Index(c)
 		assert.Equalf(t, val.output, out, "TEST[%d], failed.\n%s", i, val.desc)
 		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
 	}

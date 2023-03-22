@@ -7,8 +7,8 @@ import (
 
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
-	"zopstore/internal/models"
-	"zopstore/internal/store"
+	"Day-19/internal/models"
+	"Day-19/internal/store"
 )
 
 type Service struct {
@@ -19,7 +19,7 @@ func New(storer store.BrandStorer) *Service {
 	return &Service{store: storer}
 }
 
-func (svc *Service) GetBrand(ctx *gofr.Context, id int) (interface{}, error) {
+func (svc *Service) GetBrand(ctx *gofr.Context, id int) (models.Brand, error) {
 	res, err := svc.store.Get(ctx, id)
 
 	if err != nil {

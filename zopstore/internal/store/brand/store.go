@@ -4,7 +4,7 @@ import (
 	"developer.zopsmart.com/go/gofr/pkg/errors"
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
-	"zopstore/internal/models"
+	"Day-19/internal/models"
 )
 
 type Store struct {
@@ -14,7 +14,7 @@ func New() *Store {
 	return &Store{}
 }
 
-func (s *Store) Get(ctx *gofr.Context, id int) (interface{}, error) {
+func (s *Store) Get(ctx *gofr.Context, id int) (models.Brand, error) {
 	var b models.Brand
 
 	resp := ctx.DB().QueryRowContext(ctx, "select id,name from brands where id=?", id)

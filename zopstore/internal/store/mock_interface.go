@@ -5,7 +5,7 @@
 package store
 
 import (
-	models "zopstore/internal/models"
+	models "Day-19/internal/models"
 	reflect "reflect"
 
 	gofr "developer.zopsmart.com/go/gofr/pkg/gofr"
@@ -66,10 +66,10 @@ func (mr *MockProductStorerMockRecorder) Del(ctx, id interface{}) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockProductStorer) Get(ctx *gofr.Context, id int, brand string) (interface{}, error) {
+func (m *MockProductStorer) Get(ctx *gofr.Context, id int, brand string) (models.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, id, brand)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(models.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -93,6 +93,21 @@ func (m *MockProductStorer) GetAll(ctx *gofr.Context, brand string) ([]models.Pr
 func (mr *MockProductStorerMockRecorder) GetAll(ctx, brand interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockProductStorer)(nil).GetAll), ctx, brand)
+}
+
+// GetByName mocks base method.
+func (m *MockProductStorer) GetByName(ctx *gofr.Context, name, brand string) ([]models.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByName", ctx, name, brand)
+	ret0, _ := ret[0].([]models.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByName indicates an expected call of GetByName.
+func (mr *MockProductStorerMockRecorder) GetByName(ctx, name, brand interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByName", reflect.TypeOf((*MockProductStorer)(nil).GetByName), ctx, name, brand)
 }
 
 // Update mocks base method.
@@ -149,10 +164,10 @@ func (mr *MockBrandStorerMockRecorder) Create(ctx, brand interface{}) *gomock.Ca
 }
 
 // Get mocks base method.
-func (m *MockBrandStorer) Get(ctx *gofr.Context, id int) (interface{}, error) {
+func (m *MockBrandStorer) Get(ctx *gofr.Context, id int) (models.Brand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, id)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(models.Brand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

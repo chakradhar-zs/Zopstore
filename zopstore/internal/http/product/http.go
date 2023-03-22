@@ -1,13 +1,16 @@
 package product
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"developer.zopsmart.com/go/gofr/pkg/errors"
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
-	"zopstore/internal/models"
-	"zopstore/internal/service"
+	"Day-19/internal/constants"
+	"Day-19/internal/models"
+	"Day-19/internal/service"
 )
 
 type Handler struct {
@@ -38,10 +41,17 @@ func (h *Handler) Read(c *gofr.Context) (interface{}, error) {
 }
 
 func (h *Handler) Create(c *gofr.Context) (interface{}, error) {
-	var prod models.Product
+	var prod *models.Product
+
+	org := c.Context.Value(constants.CtxValue)
+	orgID := fmt.Sprint(org)
 	_ = c.Bind(&prod)
 
-	resp, err := h.svc.CreateProduct(c, &prod)
+	if orgID != "" {
+		prod.Name = orgID + "_" + prod.Name
+	}
+
+	resp, err := h.svc.CreateProduct(c, prod)
 
 	if err != nil {
 		return 0, err
@@ -100,6 +110,20 @@ func (h *Handler) Delete(c *gofr.Context) (interface{}, error) {
 
 func (h *Handler) Index(ctx *gofr.Context) (interface{}, error) {
 	brand := ctx.Param("brand")
+	name := ctx.Param("name")
+	org := ctx.Param("organization")
+	name = org + "_" + name
+
+	if org != "" && name != "" {
+		resp, _ := h.svc.GetProductByNAme(ctx, name, brand)
+		for i := range resp {
+			resp[i].Name = strings.TrimPrefix(resp[i].Name, org+"_")
+			fmt.Println(resp[i].Name)
+		}
+
+		return resp, nil
+	}
+
 	resp, err := h.svc.GetAllProducts(ctx, brand)
 
 	if err != nil {

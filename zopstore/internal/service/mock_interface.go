@@ -5,7 +5,7 @@
 package service
 
 import (
-	models "zopstore/internal/models"
+	models "Day-19/internal/models"
 	reflect "reflect"
 
 	gofr "developer.zopsmart.com/go/gofr/pkg/gofr"
@@ -66,10 +66,10 @@ func (mr *MockProductMockRecorder) DeleteProduct(ctx, i interface{}) *gomock.Cal
 }
 
 // GetAllProducts mocks base method.
-func (m *MockProduct) GetAllProducts(ctx *gofr.Context, brand string) (interface{}, error) {
+func (m *MockProduct) GetAllProducts(ctx *gofr.Context, brand string) ([]models.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllProducts", ctx, brand)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].([]models.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -81,10 +81,10 @@ func (mr *MockProductMockRecorder) GetAllProducts(ctx, brand interface{}) *gomoc
 }
 
 // GetProduct mocks base method.
-func (m *MockProduct) GetProduct(ctx *gofr.Context, i int, brand string) (interface{}, error) {
+func (m *MockProduct) GetProduct(ctx *gofr.Context, i int, brand string) (models.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProduct", ctx, i, brand)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(models.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -93,6 +93,21 @@ func (m *MockProduct) GetProduct(ctx *gofr.Context, i int, brand string) (interf
 func (mr *MockProductMockRecorder) GetProduct(ctx, i, brand interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProduct", reflect.TypeOf((*MockProduct)(nil).GetProduct), ctx, i, brand)
+}
+
+// GetProductByNAme mocks base method.
+func (m *MockProduct) GetProductByNAme(ctx *gofr.Context, name, brand string) ([]models.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductByNAme", ctx, name, brand)
+	ret0, _ := ret[0].([]models.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductByNAme indicates an expected call of GetProductByNAme.
+func (mr *MockProductMockRecorder) GetProductByNAme(ctx, name, brand interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductByNAme", reflect.TypeOf((*MockProduct)(nil).GetProductByNAme), ctx, name, brand)
 }
 
 // UpdateProduct mocks base method.
@@ -149,10 +164,10 @@ func (mr *MockBrandMockRecorder) CreateBrand(ctx, brand interface{}) *gomock.Cal
 }
 
 // GetBrand mocks base method.
-func (m *MockBrand) GetBrand(ctx *gofr.Context, id int) (interface{}, error) {
+func (m *MockBrand) GetBrand(ctx *gofr.Context, id int) (models.Brand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBrand", ctx, id)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(models.Brand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

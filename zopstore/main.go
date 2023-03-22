@@ -1,17 +1,18 @@
 package main
 
 import (
-	"zopstore/internal/http/brand"
-	"zopstore/internal/http/product"
+	"Day-19/internal/http/brand"
+	"Day-19/internal/http/product"
+	"Day-19/middleware"
 
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
-	productstore "zopstore/internal/store/product"
+	productstore "Day-19/internal/store/product"
 
-	productservice "zopstore/internal/service/product"
+	productservice "Day-19/internal/service/product"
 
-	brandservice "zopstore/internal/service/brand"
-	brandstore "zopstore/internal/store/brand"
+	brandservice "Day-19/internal/service/brand"
+	brandstore "Day-19/internal/store/brand"
 )
 
 func main() {
@@ -19,7 +20,7 @@ func main() {
 
 	app.Server.ValidateHeaders = false
 
-	app.Server.UseMiddleware(product.Middle)
+	app.Server.UseMiddleware(middleware.Middle, middleware.MiddleOrg)
 
 	productStore := productstore.New()
 	productSvc := productservice.New(productStore)

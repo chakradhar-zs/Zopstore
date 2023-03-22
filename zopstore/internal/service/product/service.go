@@ -7,8 +7,8 @@ import (
 
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
-	"zopstore/internal/models"
-	"zopstore/internal/store"
+	"Day-19/internal/models"
+	"Day-19/internal/store"
 )
 
 type Service struct {
@@ -19,11 +19,21 @@ func New(storer store.ProductStorer) *Service {
 	return &Service{store: storer}
 }
 
-func (s *Service) GetProduct(ctx *gofr.Context, i int, brand string) (interface{}, error) {
+func (s *Service) GetProduct(ctx *gofr.Context, i int, brand string) (models.Product, error) {
 	res, err := s.store.Get(ctx, i, brand)
 
 	if err != nil {
-		return nil, err
+		return models.Product{}, err
+	}
+
+	return res, nil
+}
+
+func (s *Service) GetProductByNAme(ctx *gofr.Context, name, brand string) ([]models.Product, error) {
+	res, err := s.store.GetByName(ctx, name, brand)
+
+	if err != nil {
+		return []models.Product{}, err
 	}
 
 	return res, nil
@@ -73,11 +83,11 @@ func (s *Service) DeleteProduct(ctx *gofr.Context, i int) (interface{}, error) {
 	return res, nil
 }
 
-func (s *Service) GetAllProducts(ctx *gofr.Context, brand string) (interface{}, error) {
+func (s *Service) GetAllProducts(ctx *gofr.Context, brand string) ([]models.Product, error) {
 	res, err := s.store.GetAll(ctx, brand)
 
 	if err != nil {
-		return nil, err
+		return []models.Product{}, err
 	}
 
 	return res, nil

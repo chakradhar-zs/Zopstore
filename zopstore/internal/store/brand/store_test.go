@@ -12,7 +12,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 
-	"zopstore/internal/models"
+	"Day-19/internal/models"
 )
 
 func TestGet(t *testing.T) {

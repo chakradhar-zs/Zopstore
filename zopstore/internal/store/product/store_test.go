@@ -10,8 +10,10 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
-	"zopstore/internal/models"
+	"Day-19/internal/models"
 )
+
+const v = "true"
 
 func TestGet(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
@@ -300,7 +302,7 @@ func TestGetAll(t *testing.T) {
 
 		mock.ExpectQuery("select").WillReturnRows(row).WillReturnError(val.mockErr)
 
-		if val.input == "true" {
+		if val.input == v {
 			mock.ExpectQuery("select name from brands").
 				WithArgs(4).
 				WillReturnRows(rb).
@@ -309,6 +311,132 @@ func TestGetAll(t *testing.T) {
 
 		st := New()
 		out, err := st.GetAll(ctx, val.input)
+		assert.Equal(t, val.output, out, "TEST failed.")
+		assert.Equal(t, val.expErr, err, "TEST failed.")
+	}
+}
+
+func TestGetByName(t *testing.T) {
+	ctx := gofr.NewContext(nil, nil, gofr.New())
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		ctx.Logger.Error("Error while opening a mock db connection")
+	}
+
+	tests := []struct {
+		desc    string
+		input   string
+		input2  string
+		output  []models.Product
+		mockErr error
+		expErr  error
+	}{
+		{desc: "Success",
+			input:  "zs_sneaker shoes",
+			input2: "true",
+			output: []models.Product{{
+				ID: 3, Name: "zs_sneaker shoes", Description: "stylish", Price: 1000, Quantity: 3, Category: "shoes",
+				Brand: models.Brand{ID: 4, Name: "Nike"}, Status: "Available",
+			}},
+			mockErr: nil,
+			expErr:  nil,
+		},
+		{desc: "Fail",
+			input:  "bag",
+			input2: "true",
+			output: []models.Product{{
+				ID: 0, Name: "", Description: "", Price: 0, Quantity: 0, Category: "",
+				Brand: models.Brand{ID: 0, Name: ""}, Status: ""}},
+			mockErr: errors.EntityNotFound{},
+			expErr:  errors.EntityNotFound{},
+		},
+		{desc: "Fail",
+			input:  "chair",
+			input2: "false",
+			output: []models.Product{{
+				ID: 0, Name: "", Description: "", Price: 0, Quantity: 0, Category: "",
+				Brand: models.Brand{ID: 0, Name: ""}, Status: ""}},
+			mockErr: errors.EntityNotFound{},
+			expErr:  errors.EntityNotFound{},
+		},
+	}
+
+	for _, val := range tests {
+		ctx.DataStore = datastore.DataStore{ORM: db}
+		ctx.Context = context.Background()
+
+		row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "status"}).
+			AddRow(val.output[0].ID, val.output[0].Name, val.output[0].Description,
+				val.output[0].Price, val.output[0].Quantity, val.output[0].Category, val.output[0].Brand.ID, val.output[0].Status)
+		rb := sqlmock.NewRows([]string{"name"}).AddRow(val.output[0].Brand.Name)
+
+		mock.ExpectQuery("select id,name,description,price,quantity,category,brand_id,status from products where name=?").
+			WithArgs(val.input).
+			WillReturnRows(row).WillReturnError(val.mockErr)
+
+		if val.input2 == "true" {
+			mock.ExpectQuery("select name from brands where id=?").
+				WithArgs(val.output[0].Brand.ID).
+				WillReturnRows(rb).
+				WillReturnError(val.mockErr)
+		}
+
+		st := New()
+		out, err := st.GetByName(ctx, val.input, val.input2)
+		assert.Equal(t, val.output, out, "TEST failed.")
+		assert.Equal(t, val.expErr, err, "TEST failed.")
+	}
+}
+
+func TestByName(t *testing.T) {
+	ctx := gofr.NewContext(nil, nil, gofr.New())
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		ctx.Logger.Error("Error while opening a mock db connection")
+	}
+
+	tests := []struct {
+		desc    string
+		input   string
+		input2  string
+		output  []models.Product
+		mockErr error
+		expErr  error
+	}{
+		{desc: "Fail",
+			input:  "zs_nike",
+			input2: "true",
+			output: []models.Product{{
+				ID: 0, Name: "", Description: "", Price: 0, Quantity: 0, Category: "",
+				Brand: models.Brand{ID: 0, Name: ""}, Status: ""}},
+			mockErr: errors.EntityNotFound{},
+			expErr:  errors.EntityNotFound{},
+		},
+	}
+
+	for _, val := range tests {
+		ctx.DataStore = datastore.DataStore{ORM: db}
+		ctx.Context = context.Background()
+
+		row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "status"}).
+			AddRow(3, "zs_nike", 99, 100, 1, "shoe", 4, "Available")
+		rb := sqlmock.NewRows([]string{"name"}).AddRow("Nike")
+
+		mock.ExpectQuery("select id,name,description,price,quantity,category,brand_id,status from products where name=?").
+			WithArgs(val.input).
+			WillReturnRows(row).WillReturnError(val.mockErr)
+
+		if val.input2 == "true" {
+			mock.ExpectQuery("select name from brands where id=?").
+				WithArgs(4).
+				WillReturnRows(rb).
+				WillReturnError(val.mockErr)
+		}
+
+		st := New()
+		out, err := st.GetByName(ctx, val.input, val.input2)
 		assert.Equal(t, val.output, out, "TEST failed.")
 		assert.Equal(t, val.expErr, err, "TEST failed.")
 	}

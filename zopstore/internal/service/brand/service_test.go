@@ -13,8 +13,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"zopstore/internal/models"
-	"zopstore/internal/store"
+	"Day-19/internal/models"
+	"Day-19/internal/store"
 )
 
 func TestGetBrand(t *testing.T) {
