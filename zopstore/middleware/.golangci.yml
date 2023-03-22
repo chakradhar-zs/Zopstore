@@ -15,7 +15,7 @@ linters-settings:
   lll:
     line-length: 140
   goimports:
-    local-prefixes: zopstore
+    local-prefixes: Day-19
   gocritic:
     enabled-tags:
       - diagnostic

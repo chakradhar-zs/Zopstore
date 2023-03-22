@@ -1,41 +1,48 @@
 package middleware
 
 import (
-	"Day-19/internal/constants"
 	"context"
 	"net/http"
 	"strings"
+
+	"Day-19/internal/constants"
 )
 
+func isPresent(m string, ms []string) bool {
+	for _, v := range ms {
+		if m == v {
+			return true
+		}
+	}
+
+	return false
+}
 func Middle(handler http.Handler) http.Handler {
+	vals := make(map[string][]string)
+	vals["product-r"] = []string{"GET", "product", "brand"}
+	vals["product-w"] = []string{"POST", "product", "brand"}
+	vals["brand-r"] = []string{"GET", "brand"}
+	vals["brand-w"] = []string{"POST", "brand"}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		head := r.Header.Get("X-API-KEY")
-		path := strings.Split(r.RequestURI, "/")[1]
+		key, ok := vals[head]
 
-		switch head {
-		case "product-r":
-			if r.Method != http.MethodGet {
-				http.Error(w, "Forbidden Request", http.StatusForbidden)
-				return
-			}
-		case "product-w":
-			if r.Method != http.MethodPost {
-				http.Error(w, "Forbidden Request", http.StatusForbidden)
-				return
-			}
-		case "brand-r":
-			if r.Method != http.MethodGet || strings.Contains(path, "product") {
-				http.Error(w, "Forbidden Request", http.StatusForbidden)
-				return
-			}
-		case "brand-w":
-			if r.Method != http.MethodPost || strings.Contains(path, "product") {
-				http.Error(w, "Forbidden Request", http.StatusForbidden)
-				return
-			}
-		default:
+		if !ok {
 			http.Error(w, "Unauthorized Request", http.StatusUnauthorized)
+			return
+		}
+
+		if !isPresent(r.Method, key) {
+			http.Error(w, "Forbidden Request", http.StatusForbidden)
+			return
+		}
+
+		path := strings.Split(r.URL.String(), "/")[1]
+		path = strings.Split(path, "?")[0]
+
+		if !isPresent(path, key) {
+			http.Error(w, "Forbidden Request", http.StatusForbidden)
 			return
 		}
 		handler.ServeHTTP(w, r)
@@ -47,7 +54,7 @@ func MiddleOrg(handler http.Handler) http.Handler {
 		org := r.Header.Get("oraganization")
 		if r.Method == http.MethodPost {
 			ctx := context.WithValue(r.Context(), constants.CtxValue, org)
-			r.WithContext(ctx)
+			r = r.WithContext(ctx)
 		}
 		handler.ServeHTTP(w, r)
 	})
