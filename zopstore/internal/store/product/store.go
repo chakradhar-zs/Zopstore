@@ -107,15 +107,19 @@ func (s *Store) GetAll(ctx *gofr.Context, brand string) ([]models.Product, error
 	}
 
 	for resp.Next() {
-		var p models.Product
-		_ = resp.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Quantity, &p.Category, &p.Brand.ID, &p.Status)
+		var prod models.Product
+		_ = resp.Scan(&prod.ID, &prod.Name, &prod.Description, &prod.Price, &prod.Quantity, &prod.Category, &prod.Brand.ID, &prod.Status)
 
 		if brand == val {
-			res := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", p.Brand.ID)
-			_ = res.Scan(&p.Brand.Name)
+			res := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", prod.Brand.ID)
+			err = res.Scan(&prod.Brand.Name)
+
+			if err != nil {
+				return nil, errors.MissingParam{Param: []string{"BrandName"}}
+			}
 		}
 
-		res = append(res, p)
+		res = append(res, prod)
 	}
 
 	return res, nil

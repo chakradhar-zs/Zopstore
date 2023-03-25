@@ -281,6 +281,53 @@ func TestGetAll(t *testing.T) {
 	}
 }
 
+func TestAllInvalidBody(t *testing.T) {
+	ctx := gofr.NewContext(nil, nil, gofr.New())
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		ctx.Logger.Error("Error while opening a mock db connection")
+	}
+
+	row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "status"}).
+		AddRow(3, "sneaker shoes", "stylish", 1000, 3, "shoes", 4, "Available")
+	rb := sqlmock.NewRows([]string{"name"}).AddRow(1)
+
+	tests := []struct {
+		desc    string
+		input   string
+		output  []models.Product
+		mockErr error
+		expErr  error
+	}{
+		{desc: "Fail",
+			input:   "true",
+			output:  nil,
+			mockErr: errors.MissingParam{Param: []string{"BrandName"}},
+			expErr:  errors.MissingParam{Param: []string{"BrandName"}},
+		},
+	}
+
+	for _, val := range tests {
+		ctx.DataStore = datastore.DataStore{ORM: db}
+		ctx.Context = context.Background()
+
+		mock.ExpectQuery("select").WillReturnRows(row).WillReturnError(nil)
+
+		if val.input == v {
+			mock.ExpectQuery("select name from brands").
+				WithArgs(4).
+				WillReturnRows(rb).
+				WillReturnError(val.mockErr)
+		}
+
+		st := New()
+		out, err := st.GetAll(ctx, val.input)
+		assert.Equal(t, val.output, out, "TEST failed.")
+		assert.Equal(t, val.expErr, err, "TEST failed.")
+	}
+}
+
 // TestGetByName is a test function which uses sql mocks to test GetByName function
 func TestGetByName(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
@@ -389,7 +436,7 @@ func TestByName(t *testing.T) {
 
 		row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "status"}).
 			AddRow(3, "zs_nike", 99, 100, 1, "shoe", 4, "Available")
-		rb := sqlmock.NewRows([]string{"name"}).AddRow("Nike")
+		rb := mock.NewRows([]string{"name"}).AddRow("Nike")
 
 		mock.ExpectQuery("select id,name,description,price,quantity,category,brand_id,status from products where name=?").
 			WithArgs(val.input).
