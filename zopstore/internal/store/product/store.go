@@ -1,8 +1,6 @@
 package product
 
 import (
-	"fmt"
-
 	"developer.zopsmart.com/go/gofr/pkg/errors"
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
@@ -23,17 +21,17 @@ const val = "true"
 func (s *Store) Get(ctx *gofr.Context, id int, brand string) (models.Product, error) {
 	var p models.Product
 
-	resp := ctx.DB().QueryRowContext(ctx, "select id,name,description,price,quantity,category,brand_id,status from products where id=?", id)
-	fmt.Println(resp)
-	err := resp.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Quantity, &p.Category, &p.Brand.ID, &p.Status)
+	resp := ctx.DB().QueryRowContext(ctx, "select products.id,products.name,products.description,products.price,"+
+		"products.quantity,products.category,brands.id,brands.name,products.status "+
+		"from products join brands on products.brand_id=brands.id where products.id=?", id)
+	err := resp.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Quantity, &p.Category, &p.Brand.ID, &p.Brand.Name, &p.Status)
 
 	if err != nil {
 		return models.Product{}, errors.EntityNotFound{Entity: "product"}
 	}
 
-	if brand == val {
-		res := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", p.Brand.ID)
-		_ = res.Scan(&p.Brand.Name)
+	if brand != val {
+		p.Brand.Name = ""
 	}
 
 	return p, nil
@@ -45,7 +43,9 @@ func (s *Store) GetByName(ctx *gofr.Context, name, brand string) ([]models.Produ
 	res := []models.Product{}
 
 	resp, _ := ctx.DB().QueryContext(ctx,
-		"select id,name,description,price,quantity,category,brand_id,status from products where name=?",
+		"select products.id,products.name,products.description,products.price,"+
+			"products.quantity,products.category,brands.id,brands.name,products.status "+
+			"from products join brands on products.brand_id=brands.id where products.name=?",
 		name)
 	if resp == nil {
 		return []models.Product{{}}, errors.EntityNotFound{Entity: "product"}
@@ -53,11 +53,10 @@ func (s *Store) GetByName(ctx *gofr.Context, name, brand string) ([]models.Produ
 
 	for resp.Next() {
 		var p models.Product
-		_ = resp.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Quantity, &p.Category, &p.Brand.ID, &p.Status)
+		_ = resp.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Quantity, &p.Category, &p.Brand.ID, &p.Brand.Name, &p.Status)
 
-		if brand == val {
-			res := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", p.Brand.ID)
-			_ = res.Scan(&p.Brand.Name)
+		if brand != val {
+			p.Brand.Name = ""
 		}
 
 		res = append(res, p)
@@ -100,7 +99,9 @@ func (s *Store) Update(ctx *gofr.Context, id int, prod *models.Product) (*models
 func (s *Store) GetAll(ctx *gofr.Context, brand string) ([]models.Product, error) {
 	res := []models.Product{}
 
-	resp, err := ctx.DB().QueryContext(ctx, "select * from products")
+	resp, err := ctx.DB().QueryContext(ctx, "select products.id,products.name,products.description,products.price,"+
+		"products.quantity,products.category,brands.id,brands.name,products.status "+
+		"from products join brands on products.brand_id=brands.id")
 
 	if err != nil {
 		return nil, errors.EntityNotFound{Entity: "product"}
@@ -108,15 +109,11 @@ func (s *Store) GetAll(ctx *gofr.Context, brand string) ([]models.Product, error
 
 	for resp.Next() {
 		var prod models.Product
-		_ = resp.Scan(&prod.ID, &prod.Name, &prod.Description, &prod.Price, &prod.Quantity, &prod.Category, &prod.Brand.ID, &prod.Status)
+		_ = resp.Scan(&prod.ID, &prod.Name, &prod.Description, &prod.Price, &prod.Quantity,
+			&prod.Category, &prod.Brand.ID, &prod.Brand.Name, &prod.Status)
 
-		if brand == val {
-			res := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", prod.Brand.ID)
-			err = res.Scan(&prod.Brand.Name)
-
-			if err != nil {
-				return nil, errors.MissingParam{Param: []string{"BrandName"}}
-			}
+		if brand != val {
+			prod.Brand.Name = ""
 		}
 
 		res = append(res, prod)

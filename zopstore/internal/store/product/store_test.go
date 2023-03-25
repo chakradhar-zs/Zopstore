@@ -13,8 +13,6 @@ import (
 	"Day-19/internal/models"
 )
 
-const v = "true"
-
 // TestGet is a test function which uses sql mocks to test Get function
 func TestGet(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
@@ -73,19 +71,13 @@ func TestGet(t *testing.T) {
 	}
 	for _, val := range tests {
 		st := New()
-		row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "status"}).
+		row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "bname", "status"}).
 			AddRow(val.output.ID, val.output.Name, val.output.Description, val.output.Price,
-				val.output.Quantity, val.output.Category, val.output.Brand.ID, val.output.Status)
-		mock.ExpectQuery("select id,name,description,price,quantity,category,brand_id,status from products where id=?").
+				val.output.Quantity, val.output.Category, val.output.Brand.ID, val.output.Brand.Name, val.output.Status)
+		mock.ExpectQuery("select").
 			WithArgs(val.input).
 			WillReturnRows(row).
 			WillReturnError(val.mockErr)
-
-		rb := sqlmock.NewRows([]string{"name"}).AddRow(val.output.Brand.Name)
-		mock.ExpectQuery("select name from brands").
-			WithArgs(val.output.Brand.ID).
-			WillReturnRows(rb).
-			WillReturnError(val.expErr)
 
 		out, err := st.Get(ctx, val.input, val.input2)
 		assert.Equal(t, val.output, out, "TEST failed.")
@@ -221,9 +213,8 @@ func TestGetAll(t *testing.T) {
 		ctx.Logger.Error("Error while opening a mock db connection")
 	}
 
-	row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "status"}).
-		AddRow(3, "sneaker shoes", "stylish", 1000, 3, "shoes", 4, "Available")
-	rb := sqlmock.NewRows([]string{"name"}).AddRow("Nike")
+	row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "bname", "status"}).
+		AddRow(3, "sneaker shoes", "stylish", 1000, 3, "shoes", 4, "Nike", "Available")
 
 	tests := []struct {
 		desc    string
@@ -233,10 +224,10 @@ func TestGetAll(t *testing.T) {
 		expErr  error
 	}{
 		{desc: "Success",
-			input: "true",
+			input: "false",
 			output: []models.Product{{
 				ID: 3, Name: "sneaker shoes", Description: "stylish", Price: 1000, Quantity: 3, Category: "shoes",
-				Brand: models.Brand{ID: 4, Name: "Nike"}, Status: "Available",
+				Brand: models.Brand{ID: 4}, Status: "Available",
 			}},
 			mockErr: nil,
 			expErr:  nil,
@@ -247,79 +238,18 @@ func TestGetAll(t *testing.T) {
 			mockErr: errors.EntityNotFound{Entity: "product"},
 			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
-		{desc: "Fail",
-			input:   "false",
-			output:  nil,
-			mockErr: errors.EntityNotFound{Entity: "product"},
-			expErr:  errors.EntityNotFound{Entity: "product"},
-		},
-		{desc: "Fail",
-			input:   "true",
-			output:  nil,
-			mockErr: errors.EntityNotFound{Entity: "product"},
-			expErr:  errors.EntityNotFound{Entity: "product"},
-		},
 	}
 
 	for _, val := range tests {
 		ctx.DataStore = datastore.DataStore{ORM: db}
 		ctx.Context = context.Background()
+
+		if val.input == "false" {
+			row = mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "bname", "status"}).
+				AddRow(3, "sneaker shoes", "stylish", 1000, 3, "shoes", 4, "", "Available")
+		}
 
 		mock.ExpectQuery("select").WillReturnRows(row).WillReturnError(val.mockErr)
-
-		if val.input == v {
-			mock.ExpectQuery("select name from brands").
-				WithArgs(4).
-				WillReturnRows(rb).
-				WillReturnError(val.mockErr)
-		}
-
-		st := New()
-		out, err := st.GetAll(ctx, val.input)
-		assert.Equal(t, val.output, out, "TEST failed.")
-		assert.Equal(t, val.expErr, err, "TEST failed.")
-	}
-}
-
-func TestAllInvalidBody(t *testing.T) {
-	ctx := gofr.NewContext(nil, nil, gofr.New())
-	db, mock, err := sqlmock.New()
-
-	if err != nil {
-		ctx.Logger.Error("Error while opening a mock db connection")
-	}
-
-	row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "status"}).
-		AddRow(3, "sneaker shoes", "stylish", 1000, 3, "shoes", 4, "Available")
-	rb := sqlmock.NewRows([]string{"name"}).AddRow(1)
-
-	tests := []struct {
-		desc    string
-		input   string
-		output  []models.Product
-		mockErr error
-		expErr  error
-	}{
-		{desc: "Fail",
-			input:   "true",
-			output:  nil,
-			mockErr: errors.MissingParam{Param: []string{"BrandName"}},
-			expErr:  errors.MissingParam{Param: []string{"BrandName"}},
-		},
-	}
-
-	for _, val := range tests {
-		ctx.DataStore = datastore.DataStore{ORM: db}
-		ctx.Context = context.Background()
-
-		mock.ExpectQuery("select").WillReturnRows(row).WillReturnError(nil)
-
-		if val.input == v {
-			mock.ExpectQuery("select name from brands").
-				WithArgs(4).
-				WillReturnRows(rb).
-				WillReturnError(val.mockErr)
-		}
 
 		st := New()
 		out, err := st.GetAll(ctx, val.input)
@@ -355,6 +285,16 @@ func TestGetByName(t *testing.T) {
 			mockErr: nil,
 			expErr:  nil,
 		},
+		{desc: "Success",
+			input:  "zs_sneaker shoes",
+			input2: "false",
+			output: []models.Product{{
+				ID: 3, Name: "zs_sneaker shoes", Description: "stylish", Price: 1000, Quantity: 3, Category: "shoes",
+				Brand: models.Brand{ID: 4}, Status: "Available",
+			}},
+			mockErr: nil,
+			expErr:  nil,
+		},
 		{desc: "Fail",
 			input:  "bag",
 			input2: "true",
@@ -379,21 +319,20 @@ func TestGetByName(t *testing.T) {
 		ctx.DataStore = datastore.DataStore{ORM: db}
 		ctx.Context = context.Background()
 
-		row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "status"}).
+		row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "bname", "status"}).
 			AddRow(val.output[0].ID, val.output[0].Name, val.output[0].Description,
-				val.output[0].Price, val.output[0].Quantity, val.output[0].Category, val.output[0].Brand.ID, val.output[0].Status)
-		rb := sqlmock.NewRows([]string{"name"}).AddRow(val.output[0].Brand.Name)
+				val.output[0].Price, val.output[0].Quantity, val.output[0].Category,
+				val.output[0].Brand.ID, val.output[0].Brand.Name, val.output[0].Status)
 
-		mock.ExpectQuery("select id,name,description,price,quantity,category,brand_id,status from products where name=?").
+		if val.input2 == "false" {
+			row = mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "bname", "status"}).
+				AddRow(val.output[0].ID, val.output[0].Name, val.output[0].Description,
+					val.output[0].Price, val.output[0].Quantity, val.output[0].Category, val.output[0].Brand.ID, "", val.output[0].Status)
+		}
+
+		mock.ExpectQuery("select").
 			WithArgs(val.input).
 			WillReturnRows(row).WillReturnError(val.mockErr)
-
-		if val.input2 == "true" {
-			mock.ExpectQuery("select name from brands where id=?").
-				WithArgs(val.output[0].Brand.ID).
-				WillReturnRows(rb).
-				WillReturnError(val.mockErr)
-		}
 
 		st := New()
 		out, err := st.GetByName(ctx, val.input, val.input2)
@@ -411,13 +350,16 @@ func TestByName(t *testing.T) {
 		ctx.Logger.Error("Error while opening a mock db connection")
 	}
 
+	row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "bname", "status"}).
+		AddRow(0, "", "", 0, 0, "", 0, "", "")
+
 	tests := []struct {
-		desc    string
-		input   string
-		input2  string
-		output  []models.Product
-		mockErr error
-		expErr  error
+		desc   string
+		input  string
+		input2 string
+		output []models.Product
+		query  *sqlmock.ExpectedQuery
+		expErr error
 	}{
 		{desc: "Fail",
 			input:  "zs_nike",
@@ -425,30 +367,16 @@ func TestByName(t *testing.T) {
 			output: []models.Product{{
 				ID: 0, Name: "", Description: "", Price: 0, Quantity: 0, Category: "",
 				Brand: models.Brand{ID: 0, Name: ""}, Status: ""}},
-			mockErr: errors.EntityNotFound{Entity: "product"},
-			expErr:  errors.EntityNotFound{Entity: "product"},
+			query: mock.ExpectQuery("select").WithArgs("zs_nike").
+				WillReturnRows(row).WillReturnError(errors.EntityNotFound{Entity: "product"}),
+			expErr: errors.EntityNotFound{Entity: "product"},
 		},
 	}
 
 	for _, val := range tests {
 		ctx.DataStore = datastore.DataStore{ORM: db}
 		ctx.Context = context.Background()
-
-		row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "status"}).
-			AddRow(3, "zs_nike", 99, 100, 1, "shoe", 4, "Available")
-		rb := mock.NewRows([]string{"name"}).AddRow("Nike")
-
-		mock.ExpectQuery("select id,name,description,price,quantity,category,brand_id,status from products where name=?").
-			WithArgs(val.input).
-			WillReturnRows(row).WillReturnError(val.mockErr)
-
-		if val.input2 == "true" {
-			mock.ExpectQuery("select name from brands where id=?").
-				WithArgs(4).
-				WillReturnRows(rb).
-				WillReturnError(val.mockErr)
-		}
-
+		_ = val.query
 		st := New()
 		out, err := st.GetByName(ctx, val.input, val.input2)
 		assert.Equal(t, val.output, out, "TEST failed.")
