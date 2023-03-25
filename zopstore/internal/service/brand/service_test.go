@@ -17,6 +17,7 @@ import (
 	"Day-19/internal/store"
 )
 
+// TestGetBrand is a test function which uses mocks to test GetBrand function
 func TestGetBrand(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -63,6 +64,7 @@ func TestGetBrand(t *testing.T) {
 	}
 }
 
+// TestCreateBrand is a test function which uses mocks to test CreateBrand function
 func TestCreateBrand(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -73,21 +75,36 @@ func TestCreateBrand(t *testing.T) {
 	tests := []struct {
 		desc   string
 		input  models.Brand
-		output interface{}
+		output models.Brand
 		expErr error
 		Call   []*gomock.Call
 	}{
 		{desc: "Success",
 			input:  models.Brand{ID: 3, Name: "Nike"},
-			output: 1,
+			output: models.Brand{ID: 3, Name: "Nike"},
 			expErr: nil,
 			Call: []*gomock.Call{
 				storeMock.EXPECT().Create(gomock.AssignableToTypeOf(&gofr.Context{}), models.Brand{ID: 3, Name: "Nike"}).
-					Return(1, nil),
+					Return(models.Brand{ID: 3, Name: "Nike"}, nil),
 			}},
 		{desc: "Fail",
 			input:  models.Brand{},
-			output: 0,
+			output: models.Brand{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
+			Call:   nil,
+		},
+		{desc: "Fail",
+			input:  models.Brand{ID: 3, Name: "Nike"},
+			output: models.Brand{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
+			Call: []*gomock.Call{
+				storeMock.EXPECT().Create(gomock.AssignableToTypeOf(&gofr.Context{}), models.Brand{ID: 3, Name: "Nike"}).
+					Return(models.Brand{}, errors.MissingParam{Param: []string{"body"}}),
+			},
+		},
+		{desc: "Fail",
+			input:  models.Brand{ID: 3, Name: ""},
+			output: models.Brand{},
 			expErr: errors.MissingParam{Param: []string{"body"}},
 			Call:   nil,
 		},
@@ -107,6 +124,7 @@ func TestCreateBrand(t *testing.T) {
 	}
 }
 
+// TestUpdateBrand is a test function which uses mocks to test UpdateBrand function
 func TestUpdateBrand(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -118,32 +136,32 @@ func TestUpdateBrand(t *testing.T) {
 		desc   string
 		input1 int
 		input2 models.Brand
-		output interface{}
+		output models.Brand
 		expErr error
 		Calls  []*gomock.Call
 	}{
 		{desc: "Success",
 			input1: 6,
 			input2: models.Brand{ID: 6, Name: "bru"},
-			output: 1,
+			output: models.Brand{ID: 6, Name: "bru"},
 			expErr: nil,
 			Calls: []*gomock.Call{
 				storeMock.EXPECT().Update(gomock.AssignableToTypeOf(&gofr.Context{}), 6, models.Brand{ID: 6, Name: "bru"}).
-					Return(1, nil),
+					Return(models.Brand{ID: 6, Name: "bru"}, nil),
 			}},
 		{desc: "Fail",
 			input1: 11,
 			input2: models.Brand{ID: 11, Name: "example"},
-			output: 0,
+			output: models.Brand{},
 			expErr: errors.EntityNotFound{},
 			Calls: []*gomock.Call{
 				storeMock.EXPECT().Update(gomock.AssignableToTypeOf(&gofr.Context{}), 11, models.Brand{ID: 11, Name: "example"}).
-					Return(0, errors.EntityNotFound{}),
+					Return(models.Brand{}, errors.EntityNotFound{}),
 			}},
 		{desc: "Fail",
 			input1: 6,
 			input2: models.Brand{},
-			output: 0,
+			output: models.Brand{},
 			expErr: errors.MissingParam{Param: []string{"body"}},
 			Calls:  nil,
 		},

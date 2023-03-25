@@ -19,6 +19,7 @@ import (
 	"Day-19/internal/service"
 )
 
+// TestRead is a test function which uses mocks to test Read handler
 func TestRead(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -43,7 +44,7 @@ func TestRead(t *testing.T) {
 		{desc: "Fail",
 			input:  "99",
 			output: models.Brand{},
-			expErr: errors.EntityNotFound{},
+			expErr: errors.EntityNotFound{Entity: "brand"},
 			calls: []*gomock.Call{
 				serviceMock.EXPECT().GetBrand(gomock.AssignableToTypeOf(&gofr.Context{}), 99).Return(models.Brand{}, errors.EntityNotFound{}),
 			}},
@@ -79,6 +80,7 @@ func TestRead(t *testing.T) {
 	}
 }
 
+// TestCreate is a test function which uses mocks to test Create handler
 func TestCreate(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -95,17 +97,25 @@ func TestCreate(t *testing.T) {
 	}{
 		{desc: "Success",
 			input:  models.Brand{ID: 3, Name: "Nike"},
-			output: 1,
+			output: models.Brand{ID: 3, Name: "Nike"},
 			expErr: nil,
 			calls: []*gomock.Call{
-				serviceMock.EXPECT().CreateBrand(gomock.AssignableToTypeOf(&gofr.Context{}), models.Brand{ID: 3, Name: "Nike"}).Return(1, nil),
+				serviceMock.EXPECT().CreateBrand(gomock.AssignableToTypeOf(&gofr.Context{}), models.Brand{ID: 3, Name: "Nike"}).
+					Return(models.Brand{ID: 3, Name: "Nike"}, nil),
 			}},
 		{desc: "Fail",
+			input:  "nike",
+			output: nil,
+			expErr: errors.InvalidParam{Param: []string{"body"}},
+			calls:  nil,
+		},
+		{desc: "Fail",
 			input:  models.Brand{},
-			output: 0,
-			expErr: errors.MissingParam{},
+			output: models.Brand{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
 			calls: []*gomock.Call{
-				serviceMock.EXPECT().CreateBrand(gomock.AssignableToTypeOf(&gofr.Context{}), models.Brand{}).Return(0, errors.MissingParam{}),
+				serviceMock.EXPECT().CreateBrand(gomock.AssignableToTypeOf(&gofr.Context{}), models.Brand{}).
+					Return(models.Brand{}, errors.MissingParam{Param: []string{"body"}}),
 			}},
 	}
 	for i, val := range tests {
@@ -123,6 +133,8 @@ func TestCreate(t *testing.T) {
 		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
 	}
 }
+
+// TestUpdate is a test function which uses mocks to test Update handler
 func TestUpdate(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -140,30 +152,39 @@ func TestUpdate(t *testing.T) {
 		{desc: "Success",
 			input1: "6",
 			input2: models.Brand{ID: 6, Name: "bru"},
-			output: 1,
+			output: models.Brand{ID: 6, Name: "bru"},
 			expErr: nil,
 			calls: []*gomock.Call{
-				serviceMock.EXPECT().UpdateBrand(gomock.AssignableToTypeOf(&gofr.Context{}), 6, models.Brand{ID: 6, Name: "bru"}).Return(1, nil),
+				serviceMock.EXPECT().UpdateBrand(gomock.AssignableToTypeOf(&gofr.Context{}), 6, models.Brand{ID: 6, Name: "bru"}).
+					Return(models.Brand{ID: 6, Name: "bru"}, nil),
 			}},
 		{desc: "Fail",
 			input1: "11",
 			input2: models.Brand{},
-			output: 0,
-			expErr: errors.EntityNotFound{},
+			output: models.Brand{},
+			expErr: errors.EntityNotFound{Entity: "brand"},
 			calls: []*gomock.Call{
-				serviceMock.EXPECT().UpdateBrand(gomock.AssignableToTypeOf(&gofr.Context{}), 11, models.Brand{}).Return(0, errors.EntityNotFound{}),
+				serviceMock.EXPECT().UpdateBrand(gomock.AssignableToTypeOf(&gofr.Context{}), 11, models.Brand{}).
+					Return(models.Brand{}, errors.EntityNotFound{Entity: "brand"}),
 			}},
 		{desc: "Fail",
 			input1: "abc",
 			input2: models.Brand{},
-			output: 0,
+			output: models.Brand{},
 			expErr: errors.InvalidParam{Param: []string{"id"}},
+			calls:  nil,
+		},
+		{desc: "Fail",
+			input1: "1",
+			input2: "nike",
+			output: nil,
+			expErr: errors.InvalidParam{Param: []string{"body"}},
 			calls:  nil,
 		},
 		{desc: "Fail",
 			input1: "",
 			input2: models.Brand{},
-			output: 0,
+			output: models.Brand{},
 			expErr: errors.MissingParam{Param: []string{"id"}},
 			calls:  nil,
 		},

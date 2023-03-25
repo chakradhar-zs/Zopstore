@@ -18,6 +18,8 @@ func New() *Store {
 
 const val = "true"
 
+// Get takes gofr context, id and brand as input
+// Then query in the database and returns product details with brand name based on brand value and error if any
 func (s *Store) Get(ctx *gofr.Context, id int, brand string) (models.Product, error) {
 	var p models.Product
 
@@ -26,7 +28,7 @@ func (s *Store) Get(ctx *gofr.Context, id int, brand string) (models.Product, er
 	err := resp.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Quantity, &p.Category, &p.Brand.ID, &p.Status)
 
 	if err != nil {
-		return models.Product{}, errors.EntityNotFound{}
+		return models.Product{}, errors.EntityNotFound{Entity: "product"}
 	}
 
 	if brand == val {
@@ -37,6 +39,8 @@ func (s *Store) Get(ctx *gofr.Context, id int, brand string) (models.Product, er
 	return p, nil
 }
 
+// GetByName takes gofr context, name and brand as input
+// Then query the database and returns list of products with brand name based on brand value and error if any
 func (s *Store) GetByName(ctx *gofr.Context, name, brand string) ([]models.Product, error) {
 	res := []models.Product{}
 
@@ -44,7 +48,7 @@ func (s *Store) GetByName(ctx *gofr.Context, name, brand string) ([]models.Produ
 		"select id,name,description,price,quantity,category,brand_id,status from products where name=?",
 		name)
 	if resp == nil {
-		return []models.Product{{}}, errors.EntityNotFound{}
+		return []models.Product{{}}, errors.EntityNotFound{Entity: "product"}
 	}
 
 	for resp.Next() {
@@ -62,52 +66,44 @@ func (s *Store) GetByName(ctx *gofr.Context, name, brand string) ([]models.Produ
 	return res, nil
 }
 
-func (s *Store) Create(ctx *gofr.Context, prod *models.Product) (interface{}, error) {
-	resp, err := ctx.DB().ExecContext(ctx, "insert into products values(?,?,?,?,?,?,?,?)",
+// Create takes gofr context and product details as input
+// Then insert into database and returns product details and error if any
+func (s *Store) Create(ctx *gofr.Context, prod *models.Product) (*models.Product, error) {
+	_, err := ctx.DB().ExecContext(ctx, "insert into products values(?,?,?,?,?,?,?,?)",
 		prod.ID, prod.Name, prod.Description, prod.Price, prod.Quantity, prod.Category, prod.Brand.ID, prod.Status)
 
 	if err != nil {
-		return int64(0), errors.MissingParam{}
+		return &models.Product{}, errors.MissingParam{Param: []string{"body"}}
 	}
 
-	res, _ := resp.RowsAffected()
-
-	return res, nil
+	return prod, nil
 }
 
-func (s *Store) Update(ctx *gofr.Context, id int, prod *models.Product) (interface{}, error) {
-	resp, err := ctx.DB().ExecContext(ctx,
+// Update takes gofr context,id and product details as input
+// Then updates the product in database and returns product details and error if any
+func (s *Store) Update(ctx *gofr.Context, id int, prod *models.Product) (*models.Product, error) {
+	_, err := ctx.DB().ExecContext(ctx,
 		"update products set name=?,description=?,price=?,quantity=?,category=?,brand_id=?,status=? where id =?",
 		prod.Name, prod.Description, prod.Price, prod.Quantity, prod.Category, prod.Brand.ID, prod.Status, id)
 
 	if err != nil {
-		return int64(0), errors.EntityNotFound{}
+		return &models.Product{}, errors.EntityNotFound{Entity: "product"}
 	}
 
-	res, _ := resp.RowsAffected()
+	prod.ID = id
 
-	return res, nil
+	return prod, nil
 }
 
-func (s *Store) Del(ctx *gofr.Context, id int) (interface{}, error) {
-	resp, err := ctx.DB().ExecContext(ctx, "delete from products where id=?", id)
-
-	if err != nil {
-		return int64(0), errors.EntityNotFound{Entity: "id"}
-	}
-
-	res, _ := resp.RowsAffected()
-
-	return res, nil
-}
-
+// GetAll takes gofr context and brand as input
+// Then returns list of all products with brand name based on brand and error if any
 func (s *Store) GetAll(ctx *gofr.Context, brand string) ([]models.Product, error) {
 	res := []models.Product{}
 
 	resp, err := ctx.DB().QueryContext(ctx, "select * from products")
 
 	if err != nil {
-		return nil, errors.EntityNotFound{}
+		return nil, errors.EntityNotFound{Entity: "product"}
 	}
 
 	for resp.Next() {

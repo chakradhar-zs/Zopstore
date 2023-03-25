@@ -15,6 +15,7 @@ import (
 	brandstore "Day-19/internal/store/brand"
 )
 
+// Dependency injection for product and brand
 func main() {
 	app := gofr.New()
 
@@ -30,7 +31,7 @@ func main() {
 	brandSvc := brandservice.New(brandStore)
 	brandHTTP := brand.New(brandSvc)
 
-	app.REST("product", prodHTTP)
-	app.REST("brand", brandHTTP)
+	app.REST("products", prodHTTP)
+	app.REST("brands", brandHTTP)
 	app.Start()
 }

@@ -17,16 +17,18 @@ func isPresent(m string, ms []string) bool {
 
 	return false
 }
+
+// Middle takes http handler and checks for X-API-KEY
 func Middle(handler http.Handler) http.Handler {
-	vals := make(map[string][]string)
-	vals["product-r"] = []string{"GET", "product", "brand"}
-	vals["product-w"] = []string{"POST", "product", "brand"}
-	vals["brand-r"] = []string{"GET", "brand"}
-	vals["brand-w"] = []string{"POST", "brand"}
+	apikeys := make(map[string][]string)
+	apikeys["product-r"] = []string{"GET", "products", "brands"}
+	apikeys["product-w"] = []string{"POST", "PUT", "products", "brands"}
+	apikeys["brand-r"] = []string{"GET", "brands"}
+	apikeys["brand-w"] = []string{"POST", "PUT", "brands"}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		head := r.Header.Get("X-API-KEY")
-		key, ok := vals[head]
+		key, ok := apikeys[head]
 
 		if !ok {
 			http.Error(w, "Unauthorized Request", http.StatusUnauthorized)
@@ -49,12 +51,19 @@ func Middle(handler http.Handler) http.Handler {
 	})
 }
 
+// MiddleOrg takes http handler and adds X-ORG to request
 func MiddleOrg(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		org := r.Header.Get("oraganization")
-		if r.Method == http.MethodPost {
+		org := r.Header.Get("X-ORG")
+		if r.Method == http.MethodPost || r.Method == http.MethodPut {
 			ctx := context.WithValue(r.Context(), constants.CtxValue, org)
 			r = r.WithContext(ctx)
+		}
+		if r.Method == http.MethodGet {
+			url := r.URL
+			query := url.Query()
+			query.Add("organization", org)
+			r.URL.RawQuery = query.Encode()
 		}
 		handler.ServeHTTP(w, r)
 	})

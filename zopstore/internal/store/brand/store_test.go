@@ -15,6 +15,7 @@ import (
 	"Day-19/internal/models"
 )
 
+// TestGet is a test function which uses sql mocks to test Get function
 func TestGet(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
 	db, mock, err := sqlmock.New()
@@ -42,8 +43,8 @@ func TestGet(t *testing.T) {
 		{desc: "Fail",
 			input:   11,
 			output:  models.Brand{},
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			mockErr: errors.EntityNotFound{Entity: "brand", ID: "id"},
+			expErr:  errors.EntityNotFound{Entity: "brand", ID: "id"},
 		},
 	}
 
@@ -60,6 +61,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
+// TestCreate is a test function which uses sql mocks to test Create function
 func TestCreate(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
 	db, mock, err := sqlmock.New()
@@ -73,21 +75,21 @@ func TestCreate(t *testing.T) {
 	tests := []struct {
 		desc    string
 		input   models.Brand
-		output  int64
+		output  models.Brand
 		mockErr error
 		expErr  error
 	}{
 		{desc: "Success",
 			input:   models.Brand{ID: 3, Name: "Nike"},
-			output:  1,
+			output:  models.Brand{ID: 3, Name: "Nike"},
 			mockErr: nil,
 			expErr:  nil,
 		},
 		{desc: "Fail",
 			input:   models.Brand{},
-			output:  0,
-			mockErr: errors.MissingParam{},
-			expErr:  errors.MissingParam{},
+			output:  models.Brand{},
+			mockErr: errors.MissingParam{Param: []string{"body"}},
+			expErr:  errors.MissingParam{Param: []string{"body"}},
 		},
 	}
 
@@ -95,7 +97,7 @@ func TestCreate(t *testing.T) {
 		st := New()
 
 		mock.ExpectExec("insert into").WithArgs(val.input.ID, val.input.Name).
-			WillReturnResult(sqlmock.NewResult(int64(val.input.ID), val.output)).
+			WillReturnResult(sqlmock.NewResult(int64(val.input.ID), 1)).
 			WillReturnError(val.mockErr)
 
 		out, err := st.Create(ctx, val.input)
@@ -104,6 +106,7 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+// TestUpdate is a test function which uses sql mocks to test Update function
 func TestUpdate(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
 	db, mock, err := sqlmock.New()
@@ -118,23 +121,23 @@ func TestUpdate(t *testing.T) {
 		desc    string
 		input1  int
 		input2  models.Brand
-		output  int64
+		output  models.Brand
 		mockErr error
 		expErr  error
 	}{
 		{desc: "Success",
 			input1:  6,
 			input2:  models.Brand{ID: 6, Name: "bru"},
-			output:  1,
+			output:  models.Brand{ID: 6, Name: "bru"},
 			mockErr: nil,
 			expErr:  nil,
 		},
 		{desc: "Fail",
 			input1:  99,
 			input2:  models.Brand{},
-			output:  0,
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			output:  models.Brand{},
+			mockErr: errors.EntityNotFound{Entity: "brand", ID: "id"},
+			expErr:  errors.EntityNotFound{Entity: "brand", ID: "id"},
 		},
 	}
 
@@ -143,7 +146,7 @@ func TestUpdate(t *testing.T) {
 
 		mock.ExpectExec("update").
 			WithArgs(val.input2.Name, val.input1).
-			WillReturnResult(sqlmock.NewResult(int64(val.input1), val.output)).
+			WillReturnResult(sqlmock.NewResult(int64(val.input1), 1)).
 			WillReturnError(val.mockErr)
 
 		out, err := st.Update(ctx, val.input1, val.input2)

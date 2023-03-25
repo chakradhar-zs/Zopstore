@@ -36,10 +36,10 @@ func (m *MockProduct) EXPECT() *MockProductMockRecorder {
 }
 
 // CreateProduct mocks base method.
-func (m *MockProduct) CreateProduct(ctx *gofr.Context, p *models.Product) (interface{}, error) {
+func (m *MockProduct) CreateProduct(ctx *gofr.Context, p *models.Product) (*models.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProduct", ctx, p)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(*models.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -48,21 +48,6 @@ func (m *MockProduct) CreateProduct(ctx *gofr.Context, p *models.Product) (inter
 func (mr *MockProductMockRecorder) CreateProduct(ctx, p interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProduct)(nil).CreateProduct), ctx, p)
-}
-
-// DeleteProduct mocks base method.
-func (m *MockProduct) DeleteProduct(ctx *gofr.Context, i int) (interface{}, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteProduct", ctx, i)
-	ret0, _ := ret[0].(interface{})
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DeleteProduct indicates an expected call of DeleteProduct.
-func (mr *MockProductMockRecorder) DeleteProduct(ctx, i interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProduct", reflect.TypeOf((*MockProduct)(nil).DeleteProduct), ctx, i)
 }
 
 // GetAllProducts mocks base method.
@@ -111,10 +96,10 @@ func (mr *MockProductMockRecorder) GetProductByNAme(ctx, name, brand interface{}
 }
 
 // UpdateProduct mocks base method.
-func (m *MockProduct) UpdateProduct(ctx *gofr.Context, i int, p *models.Product) (interface{}, error) {
+func (m *MockProduct) UpdateProduct(ctx *gofr.Context, i int, p *models.Product) (*models.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProduct", ctx, i, p)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(*models.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -149,10 +134,10 @@ func (m *MockBrand) EXPECT() *MockBrandMockRecorder {
 }
 
 // CreateBrand mocks base method.
-func (m *MockBrand) CreateBrand(ctx *gofr.Context, brand models.Brand) (interface{}, error) {
+func (m *MockBrand) CreateBrand(ctx *gofr.Context, brand models.Brand) (models.Brand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateBrand", ctx, brand)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(models.Brand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -179,10 +164,10 @@ func (mr *MockBrandMockRecorder) GetBrand(ctx, id interface{}) *gomock.Call {
 }
 
 // UpdateBrand mocks base method.
-func (m *MockBrand) UpdateBrand(ctx *gofr.Context, id int, brand models.Brand) (interface{}, error) {
+func (m *MockBrand) UpdateBrand(ctx *gofr.Context, id int, brand models.Brand) (models.Brand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateBrand", ctx, id, brand)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(models.Brand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

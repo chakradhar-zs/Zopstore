@@ -17,6 +17,7 @@ import (
 	"Day-19/internal/store"
 )
 
+// TestGetProduct is a test function which uses mocks to test GetProduct
 func TestGetProduct(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -70,6 +71,7 @@ func TestGetProduct(t *testing.T) {
 	}
 }
 
+// TestGet is a test function which uses mocks to test GetProduct
 func TestGet(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -113,6 +115,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
+// TestCreateProduct is a test function which uses mocks to test CreateProduct
 func TestCreateProduct(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -122,7 +125,7 @@ func TestCreateProduct(t *testing.T) {
 	tests := []struct {
 		desc   string
 		input  *models.Product
-		output interface{}
+		output *models.Product
 		expErr error
 		Call   []*gomock.Call
 	}{
@@ -130,18 +133,35 @@ func TestCreateProduct(t *testing.T) {
 			input: &models.Product{
 				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
 				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
-			output: 1,
+			output: &models.Product{
+				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
 			expErr: nil,
 			Call: []*gomock.Call{
 				storeMock.EXPECT().
 					Create(gomock.AssignableToTypeOf(&gofr.Context{}), &models.Product{
 						ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
 						Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}).
-					Return(1, nil),
+					Return(&models.Product{
+						ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+						Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}, nil),
+			}},
+		{desc: "Fail",
+			input: &models.Product{
+				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
+			output: &models.Product{},
+			expErr: errors.EntityNotFound{Entity: "product"},
+			Call: []*gomock.Call{
+				storeMock.EXPECT().
+					Create(gomock.AssignableToTypeOf(&gofr.Context{}), &models.Product{
+						ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+						Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}).
+					Return(&models.Product{}, errors.MissingParam{Param: []string{"body"}}),
 			}},
 		{desc: "Fail",
 			input:  &models.Product{},
-			output: 0,
+			output: &models.Product{},
 			expErr: errors.MissingParam{Param: []string{"body"}},
 			Call:   nil,
 		},
@@ -160,6 +180,84 @@ func TestCreateProduct(t *testing.T) {
 	}
 }
 
+// TestCreateWithInvalidBody is a test function which uses mocks to test CreateProduct with invalid body
+func TestCreateWithInvalidBody(t *testing.T) {
+	app := gofr.New()
+	ctrl := gomock.NewController(t)
+
+	defer ctrl.Finish()
+	storeMock := store.NewMockProductStorer(ctrl)
+	tests := []struct {
+		desc   string
+		input  *models.Product
+		output *models.Product
+		expErr error
+		Call   []*gomock.Call
+	}{
+		{desc: "Fail",
+			input: &models.Product{
+				ID: 1, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 0, Name: ""}, Status: "Available"},
+			output: &models.Product{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
+			Call:   nil,
+		},
+		{desc: "Fail",
+			input: &models.Product{
+				ID: 1, Name: "maggi", Description: "tasty", Price: 0, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
+			output: &models.Product{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
+			Call:   nil,
+		},
+		{desc: "Fail",
+			input: &models.Product{
+				ID: 1, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
+			output: &models.Product{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
+			Call:   nil,
+		},
+		{desc: "Fail",
+			input: &models.Product{
+				ID: 1, Name: "", Description: "tasty", Price: 50, Quantity: 3, Category: "",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
+			output: &models.Product{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
+			Call:   nil,
+		},
+		{desc: "Fail",
+			input: &models.Product{
+				ID: 1, Name: "maggi", Description: "", Price: 50, Quantity: 3, Category: "",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
+			output: &models.Product{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
+			Call:   nil,
+		},
+		{desc: "Fail",
+			input: &models.Product{
+				ID: 1, Name: "maggi", Description: "tasty", Price: 50, Quantity: 0, Category: "",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
+			output: &models.Product{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
+			Call:   nil,
+		},
+	}
+
+	for i, val := range tests {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		req := request.NewHTTPRequest(r)
+		res := responder.NewContextualResponder(w, r)
+		ctx := gofr.NewContext(res, req, app)
+		s := New(storeMock)
+		out, err := s.CreateProduct(ctx, val.input)
+		assert.Equalf(t, val.output, out, "TEST[%d], failed.\n%s", i, val.desc)
+		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
+	}
+}
+
+// TestUpdateProduct is a test function which uses mocks to test UpdateProduct
 func TestUpdateProduct(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -170,7 +268,7 @@ func TestUpdateProduct(t *testing.T) {
 		desc   string
 		input1 int
 		input2 *models.Product
-		output interface{}
+		output *models.Product
 		expErr error
 		Calls  []*gomock.Call
 	}{
@@ -179,19 +277,32 @@ func TestUpdateProduct(t *testing.T) {
 			input2: &models.Product{
 				ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
 				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
-			output: 1,
+			output: &models.Product{
+				ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
 			expErr: nil,
 			Calls: []*gomock.Call{
 				storeMock.EXPECT().
 					Update(gomock.AssignableToTypeOf(&gofr.Context{}), 6, &models.Product{
 						ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
 						Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}).
-					Return(1, nil),
+					Return(&models.Product{
+						ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
+						Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}, nil),
 			}},
+		{desc: "Fail",
+			input1: 6,
+			input2: &models.Product{
+				ID: 6, Name: "maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: ""},
+			output: &models.Product{},
+			expErr: errors.MissingParam{Param: []string{"body"}},
+			Calls:  nil,
+		},
 		{desc: "Fail",
 			input1: 2,
 			input2: &models.Product{},
-			output: 0,
+			output: &models.Product{},
 			expErr: errors.MissingParam{Param: []string{"body"}},
 			Calls:  nil,
 		},
@@ -200,14 +311,14 @@ func TestUpdateProduct(t *testing.T) {
 			input2: &models.Product{
 				ID: 333, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
 				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
-			output: 0,
+			output: &models.Product{},
 			expErr: errors.EntityNotFound{Entity: "id"},
 			Calls: []*gomock.Call{
 				storeMock.EXPECT().
 					Update(gomock.AssignableToTypeOf(&gofr.Context{}), 333, &models.Product{
 						ID: 333, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
 						Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}).
-					Return(0, errors.EntityNotFound{Entity: "id"}),
+					Return(&models.Product{}, errors.EntityNotFound{Entity: "id"}),
 			}},
 	}
 
@@ -224,59 +335,7 @@ func TestUpdateProduct(t *testing.T) {
 	}
 }
 
-func TestDeleteProduct(t *testing.T) {
-	app := gofr.New()
-	ctrl := gomock.NewController(t)
-
-	defer ctrl.Finish()
-	storeMock := store.NewMockProductStorer(ctrl)
-	tests := []struct {
-		desc   string
-		input  int
-		output interface{}
-		expErr error
-		calls  []*gomock.Call
-	}{
-		{desc: "Success",
-			input:  5,
-			output: 1,
-			expErr: nil,
-			calls: []*gomock.Call{
-				storeMock.EXPECT().Del(gomock.AssignableToTypeOf(&gofr.Context{}), 5).
-					Return(1, nil),
-			}},
-		{desc: "Fail",
-			input:  99,
-			output: 0,
-			expErr: errors.EntityNotFound{Entity: "id"},
-			calls: []*gomock.Call{
-				storeMock.EXPECT().Del(gomock.AssignableToTypeOf(&gofr.Context{}), 99).
-					Return(0, errors.EntityNotFound{Entity: "id"}),
-			}},
-		{desc: "Fail",
-			input:  333,
-			output: 0,
-			expErr: errors.EntityNotFound{Entity: "id"},
-			calls: []*gomock.Call{
-				storeMock.EXPECT().Del(gomock.AssignableToTypeOf(&gofr.Context{}), 333).
-					Return(0, errors.EntityNotFound{Entity: "id"}),
-			}},
-	}
-
-	for i, val := range tests {
-		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-
-		req := request.NewHTTPRequest(r)
-		res := responder.NewContextualResponder(w, r)
-		ctx := gofr.NewContext(res, req, app)
-		s := New(storeMock)
-		out, err := s.DeleteProduct(ctx, val.input)
-		assert.Equalf(t, val.output, out, "TEST[%d], failed.\n%s", i, val.desc)
-		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
-	}
-}
-
+// TestGetAllProducts is a test function which uses mocks to test GetAllProducts
 func TestGetAllProducts(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -329,7 +388,8 @@ func TestGetAllProducts(t *testing.T) {
 	}
 }
 
-func TestGetProductByNAme(t *testing.T) {
+// TestGetProductByName is a test function which uses mocks to test GetProductByName
+func TestGetProductByName(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
 

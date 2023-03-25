@@ -15,6 +15,7 @@ import (
 
 const v = "true"
 
+// TestGet is a test function which uses sql mocks to test Get function
 func TestGet(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
 	db, mock, err := sqlmock.New()
@@ -59,15 +60,15 @@ func TestGet(t *testing.T) {
 			input:   333,
 			input2:  "false",
 			output:  models.Product{},
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
 		{desc: "Fail",
 			input:   22,
 			input2:  "true",
 			output:  models.Product{},
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
 	}
 	for _, val := range tests {
@@ -92,6 +93,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
+// TestCreate is a test function which uses sql mocks to test Create function
 func TestCreate(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
 	db, mock, err := sqlmock.New()
@@ -103,7 +105,7 @@ func TestCreate(t *testing.T) {
 	tests := []struct {
 		desc    string
 		input   *models.Product
-		output  int64
+		output  *models.Product
 		mockErr error
 		expErr  error
 	}{
@@ -112,15 +114,18 @@ func TestCreate(t *testing.T) {
 				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
 				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available",
 			},
-			output:  1,
+			output: &models.Product{
+				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available",
+			},
 			mockErr: nil,
 			expErr:  nil,
 		},
 		{desc: "Fail",
 			input:   &models.Product{},
-			output:  0,
-			mockErr: errors.MissingParam{},
-			expErr:  errors.MissingParam{},
+			output:  &models.Product{},
+			mockErr: errors.MissingParam{Param: []string{"body"}},
+			expErr:  errors.MissingParam{Param: []string{"body"}},
 		},
 	}
 
@@ -131,7 +136,7 @@ func TestCreate(t *testing.T) {
 		mock.ExpectExec("insert into").
 			WithArgs(val.input.ID, val.input.Name, val.input.Description, val.input.Price, val.input.Quantity,
 				val.input.Category, val.input.Brand.ID, val.input.Status).
-			WillReturnResult(sqlmock.NewResult(6, val.output)).
+			WillReturnResult(sqlmock.NewResult(6, 1)).
 			WillReturnError(val.mockErr)
 
 		st := New()
@@ -141,6 +146,7 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+// TestUpdate is a test function which uses sql mocks to test Update function
 func TestUpdate(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
 	db, mock, err := sqlmock.New()
@@ -153,7 +159,7 @@ func TestUpdate(t *testing.T) {
 		desc    string
 		input1  int
 		input2  *models.Product
-		output  int64
+		output  *models.Product
 		mockErr error
 		expErr  error
 	}{
@@ -163,16 +169,19 @@ func TestUpdate(t *testing.T) {
 				ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
 				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available",
 			},
-			output:  1,
+			output: &models.Product{
+				ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available",
+			},
 			mockErr: nil,
 			expErr:  nil,
 		},
 		{desc: "Fail",
 			input1:  2,
 			input2:  &models.Product{},
-			output:  0,
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			output:  &models.Product{},
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
 		{desc: "Fail",
 			input1: 333,
@@ -180,9 +189,9 @@ func TestUpdate(t *testing.T) {
 				ID: 333, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
 				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available",
 			},
-			output:  0,
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			output:  &models.Product{},
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
 	}
 
@@ -193,7 +202,7 @@ func TestUpdate(t *testing.T) {
 		mock.ExpectExec("update ").
 			WithArgs(val.input2.Name, val.input2.Description, val.input2.Price, val.input2.Quantity,
 				val.input2.Category, val.input2.Brand.ID, val.input2.Status, val.input2.ID).
-			WillReturnResult(sqlmock.NewResult(6, val.output)).
+			WillReturnResult(sqlmock.NewResult(6, 1)).
 			WillReturnError(val.mockErr)
 
 		st := New()
@@ -203,57 +212,7 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
-func TestDel(t *testing.T) {
-	ctx := gofr.NewContext(nil, nil, gofr.New())
-	db, mock, err := sqlmock.New()
-
-	if err != nil {
-		ctx.Logger.Error("Error while opening a mock db connection")
-	}
-
-	tests := []struct {
-		desc    string
-		input   int
-		output  int64
-		mockErr error
-		expErr  error
-	}{
-		{desc: "Success",
-			input:   5,
-			output:  1,
-			mockErr: nil,
-			expErr:  nil,
-		},
-		{desc: "Fail",
-			input:   99,
-			output:  0,
-			mockErr: errors.EntityNotFound{Entity: "id"},
-			expErr:  errors.EntityNotFound{Entity: "id"},
-		},
-		{desc: "Fail",
-			input:   333,
-			output:  0,
-			mockErr: errors.EntityNotFound{Entity: "id"},
-			expErr:  errors.EntityNotFound{Entity: "id"},
-		},
-	}
-
-	for _, val := range tests {
-		ctx.DataStore = datastore.DataStore{ORM: db}
-		ctx.Context = context.Background()
-
-		mock.ExpectExec("delete ").
-			WithArgs(val.input).
-			WillReturnResult(sqlmock.NewResult(5, val.output)).
-			WillReturnError(val.mockErr)
-
-		st := New()
-		out, err := st.Del(ctx, val.input)
-		assert.Equal(t, val.output, out, "TEST failed.")
-		assert.Equal(t, val.expErr, err, "TEST failed.")
-	}
-}
-
+// TestGetAll is a test function which uses sql mocks to test GetAll function
 func TestGetAll(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
 	db, mock, err := sqlmock.New()
@@ -285,14 +244,20 @@ func TestGetAll(t *testing.T) {
 		{desc: "Fail",
 			input:   "true",
 			output:  nil,
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
 		{desc: "Fail",
 			input:   "false",
 			output:  nil,
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
+		},
+		{desc: "Fail",
+			input:   "true",
+			output:  nil,
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
 	}
 
@@ -316,6 +281,7 @@ func TestGetAll(t *testing.T) {
 	}
 }
 
+// TestGetByName is a test function which uses sql mocks to test GetByName function
 func TestGetByName(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
 	db, mock, err := sqlmock.New()
@@ -348,8 +314,8 @@ func TestGetByName(t *testing.T) {
 			output: []models.Product{{
 				ID: 0, Name: "", Description: "", Price: 0, Quantity: 0, Category: "",
 				Brand: models.Brand{ID: 0, Name: ""}, Status: ""}},
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
 		{desc: "Fail",
 			input:  "chair",
@@ -357,8 +323,8 @@ func TestGetByName(t *testing.T) {
 			output: []models.Product{{
 				ID: 0, Name: "", Description: "", Price: 0, Quantity: 0, Category: "",
 				Brand: models.Brand{ID: 0, Name: ""}, Status: ""}},
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
 	}
 
@@ -389,6 +355,7 @@ func TestGetByName(t *testing.T) {
 	}
 }
 
+// TestByName is a test function which uses sql mocks to test GetByName function
 func TestByName(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())
 	db, mock, err := sqlmock.New()
@@ -411,8 +378,8 @@ func TestByName(t *testing.T) {
 			output: []models.Product{{
 				ID: 0, Name: "", Description: "", Price: 0, Quantity: 0, Category: "",
 				Brand: models.Brand{ID: 0, Name: ""}, Status: ""}},
-			mockErr: errors.EntityNotFound{},
-			expErr:  errors.EntityNotFound{},
+			mockErr: errors.EntityNotFound{Entity: "product"},
+			expErr:  errors.EntityNotFound{Entity: "product"},
 		},
 	}
 

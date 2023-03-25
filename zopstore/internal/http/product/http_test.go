@@ -33,6 +33,7 @@ func initTest(path string) *gofr.Context {
 	return ctx
 }
 
+// TestRead is a test function which uses mocks to test Read handler
 func TestRead(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -71,6 +72,17 @@ func TestRead(t *testing.T) {
 						Brand: models.Brand{ID: 4, Name: ""}, Status: "Available"}, nil),
 			}},
 		{desc: "Fail",
+			path:   "/product/?brand=false",
+			input:  "9",
+			input1: "false",
+			output: nil,
+			expErr: errors.EntityNotFound{Entity: "product"},
+			calls: []*gomock.Call{
+				serviceMock.EXPECT().
+					GetProduct(gomock.AssignableToTypeOf(&gofr.Context{}), 9, "false").
+					Return(models.Product{}, errors.EntityNotFound{Entity: "product"}),
+			}},
+		{desc: "Fail",
 			path:   "/product/?brand=true",
 			input:  "abc",
 			input1: "true",
@@ -100,6 +112,8 @@ func TestRead(t *testing.T) {
 		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
 	}
 }
+
+// TestReadPro is a test function which uses mocks to test Read handler
 func TestReadPro(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -151,6 +165,7 @@ func TestReadPro(t *testing.T) {
 	}
 }
 
+// TestWrite is a test function which uses mocks to test Create handler
 func TestWrite(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -182,28 +197,53 @@ func TestWrite(t *testing.T) {
 				Brand:       models.Brand{ID: 1, Name: ""},
 				Status:      "Available",
 			},
-			output: 1,
+			output: &models.Product{
+				ID:          6,
+				Name:        "maggi",
+				Description: "tasty",
+				Price:       50,
+				Quantity:    3,
+				Category:    "noodles",
+				Brand:       models.Brand{ID: 1, Name: ""},
+				Status:      "Available",
+			},
 			expErr: nil,
 			calls: []*gomock.Call{
 				serviceMock.EXPECT().
 					CreateProduct(gomock.AssignableToTypeOf(&gofr.Context{}), &product1).
-					Return(1, nil),
+					Return(&models.Product{
+						ID:          6,
+						Name:        "maggi",
+						Description: "tasty",
+						Price:       50,
+						Quantity:    3,
+						Category:    "noodles",
+						Brand:       models.Brand{ID: 1, Name: ""},
+						Status:      "Available",
+					}, nil),
 			}},
 		{desc: "Fail",
 			org:    "",
 			input:  models.Product{},
-			output: 0,
+			output: &models.Product{},
 			expErr: errors.MissingParam{Param: []string{"body"}},
 			calls: []*gomock.Call{
 				serviceMock.EXPECT().CreateProduct(gomock.AssignableToTypeOf(&gofr.Context{}), &models.Product{}).
-					Return(0, errors.MissingParam{Param: []string{"body"}}),
+					Return(&models.Product{}, errors.MissingParam{Param: []string{"body"}}),
 			}},
+		{desc: "Fail",
+			org:    "",
+			input:  "nike",
+			output: nil,
+			expErr: errors.InvalidParam{Param: []string{"body"}},
+			calls:  nil,
+		},
 	}
 
 	for i, val := range tests {
 		body, _ := json.Marshal(val.input)
 		ctx := context.WithValue(context.Background(), constants.CtxValue, val.org)
-		r := httptest.NewRequest(http.MethodGet, "/", bytes.NewReader(body))
+		r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
 		r = r.WithContext(ctx)
 		req := request.NewHTTPRequest(r)
 		c := gofr.NewContext(nil, req, app)
@@ -217,6 +257,7 @@ func TestWrite(t *testing.T) {
 	}
 }
 
+// TestUpdate is a test function which uses mocks to test Update handler
 func TestUpdate(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -225,6 +266,7 @@ func TestUpdate(t *testing.T) {
 	serviceMock := service.NewMockProduct(ctrl)
 	tests := []struct {
 		desc   string
+		org    string
 		input1 string
 		input2 interface{}
 		output interface{}
@@ -232,128 +274,80 @@ func TestUpdate(t *testing.T) {
 		calls  []*gomock.Call
 	}{
 		{desc: "Success",
+			org:    "zs",
 			input1: "6",
 			input2: models.Product{
-				ID:          6,
-				Name:        "Maggi",
-				Description: "yummy",
-				Price:       50,
-				Quantity:    3,
-				Category:    "noodles",
-				Brand:       models.Brand{ID: 1, Name: ""},
-				Status:      "Available"},
-			output: 1,
+				ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3,
+				Category: "noodles", Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
+			output: &models.Product{
+				ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3,
+				Category: "noodles", Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
 			expErr: nil,
 			calls: []*gomock.Call{
 				serviceMock.EXPECT().
 					UpdateProduct(gomock.AssignableToTypeOf(&gofr.Context{}), 6, &models.Product{
-						ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
+						ID: 6, Name: "zs_Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
 						Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}).
-					Return(1, nil),
+					Return(&models.Product{
+						ID: 6, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3,
+						Category: "noodles", Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"}, nil),
 			}},
 		{desc: "Fail",
 			input1: "2",
+			org:    "",
 			input2: models.Product{},
-			output: 0,
+			output: &models.Product{},
 			expErr: errors.MissingParam{Param: []string{"body"}},
 			calls: []*gomock.Call{
 				serviceMock.EXPECT().UpdateProduct(gomock.AssignableToTypeOf(&gofr.Context{}), 2, &models.Product{}).
-					Return(0, errors.MissingParam{Param: []string{"body"}}),
+					Return(&models.Product{}, errors.MissingParam{Param: []string{"body"}}),
 			}},
 		{desc: "Fail",
 			input1: "abc",
+			org:    "",
 			input2: models.Product{},
-			output: 0,
+			output: &models.Product{},
 			expErr: errors.InvalidParam{Param: []string{"id"}},
 			calls:  nil,
 		},
 		{desc: "Fail",
 			input1: "",
+			org:    "",
 			input2: models.Product{},
-			output: 0,
+			output: &models.Product{},
 			expErr: errors.MissingParam{Param: []string{"id"}},
+			calls:  nil,
+		},
+		{desc: "Fail",
+			input1: "3",
+			org:    "",
+			input2: "nike",
+			output: nil,
+			expErr: errors.InvalidParam{Param: []string{"body"}},
 			calls:  nil,
 		},
 	}
 
 	for i, val := range tests {
 		body, _ := json.Marshal(val.input2)
-		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/", bytes.NewReader(body))
+		ctx := context.WithValue(context.Background(), constants.CtxValue, val.org)
+		r := httptest.NewRequest(http.MethodPut, "/", bytes.NewReader(body))
+		r = r.WithContext(ctx)
 		req := request.NewHTTPRequest(r)
-		res := responder.NewContextualResponder(w, r)
-		ctx := gofr.NewContext(res, req, app)
-		ctx.SetPathParams(map[string]string{
+		c := gofr.NewContext(nil, req, app)
+		c.Context = r.Context()
+		c.SetPathParams(map[string]string{
 			"id": val.input1,
 		})
 
 		h := New(serviceMock)
-		out, err := h.Update(ctx)
+		out, err := h.Update(c)
 		assert.Equalf(t, val.output, out, "TEST[%d], failed.\n%s", i, val.desc)
 		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
 	}
 }
 
-func TestDelete(t *testing.T) {
-	app := gofr.New()
-	ctrl := gomock.NewController(t)
-
-	defer ctrl.Finish()
-	serviceMock := service.NewMockProduct(ctrl)
-	tests := []struct {
-		desc   string
-		input  string
-		output interface{}
-		expErr error
-		calls  []*gomock.Call
-	}{
-		{desc: "Success",
-			input:  "3",
-			output: 1,
-			expErr: nil,
-			calls: []*gomock.Call{
-				serviceMock.EXPECT().DeleteProduct(gomock.AssignableToTypeOf(&gofr.Context{}), 3).
-					Return(1, nil),
-			}},
-		{desc: "Fail",
-			input:  "333",
-			output: 0,
-			expErr: errors.EntityNotFound{Entity: "id"},
-			calls: []*gomock.Call{
-				serviceMock.EXPECT().DeleteProduct(gomock.AssignableToTypeOf(&gofr.Context{}), 333).
-					Return(0, errors.EntityNotFound{Entity: "id"}),
-			}},
-		{desc: "Fail",
-			input:  "abc",
-			output: 0,
-			expErr: errors.InvalidParam{Param: []string{"id"}},
-			calls:  nil,
-		},
-		{desc: "Fail",
-			input:  "",
-			output: 0,
-			expErr: errors.MissingParam{Param: []string{"id"}},
-			calls:  nil,
-		},
-	}
-
-	for i, val := range tests {
-		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		req := request.NewHTTPRequest(r)
-		res := responder.NewContextualResponder(w, r)
-		ctx := gofr.NewContext(res, req, app)
-		ctx.SetPathParams(map[string]string{
-			"id": val.input,
-		})
-
-		h := New(serviceMock)
-		out, err := h.Delete(ctx)
-		assert.Equalf(t, val.output, out, "TEST[%d], failed.\n%s", i, val.desc)
-		assert.Equalf(t, val.expErr, err, "TEST[%d], failed.\n%s", i, val.desc)
-	}
-}
-
+// TestIndex is a test function which uses mocks to test Index handler
 func TestIndex(t *testing.T) {
 	app := gofr.New()
 	ctrl := gomock.NewController(t)
@@ -394,10 +388,10 @@ func TestIndex(t *testing.T) {
 			name:   "",
 			path:   "/product/?brand=true",
 			output: nil,
-			expErr: errors.EntityNotFound{},
+			expErr: errors.EntityNotFound{Entity: "product"},
 			calls: []*gomock.Call{
 				serviceMock.EXPECT().GetAllProducts(gomock.AssignableToTypeOf(&gofr.Context{}), "true").
-					Return(nil, errors.EntityNotFound{}),
+					Return(nil, errors.EntityNotFound{Entity: "product"}),
 			}},
 		{desc: "Success",
 			org:  "",

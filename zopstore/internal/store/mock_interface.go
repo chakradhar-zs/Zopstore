@@ -36,10 +36,10 @@ func (m *MockProductStorer) EXPECT() *MockProductStorerMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockProductStorer) Create(ctx *gofr.Context, prod *models.Product) (interface{}, error) {
+func (m *MockProductStorer) Create(ctx *gofr.Context, prod *models.Product) (*models.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, prod)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(*models.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -48,21 +48,6 @@ func (m *MockProductStorer) Create(ctx *gofr.Context, prod *models.Product) (int
 func (mr *MockProductStorerMockRecorder) Create(ctx, prod interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockProductStorer)(nil).Create), ctx, prod)
-}
-
-// Del mocks base method.
-func (m *MockProductStorer) Del(ctx *gofr.Context, id int) (interface{}, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Del", ctx, id)
-	ret0, _ := ret[0].(interface{})
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Del indicates an expected call of Del.
-func (mr *MockProductStorerMockRecorder) Del(ctx, id interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Del", reflect.TypeOf((*MockProductStorer)(nil).Del), ctx, id)
 }
 
 // Get mocks base method.
@@ -111,10 +96,10 @@ func (mr *MockProductStorerMockRecorder) GetByName(ctx, name, brand interface{})
 }
 
 // Update mocks base method.
-func (m *MockProductStorer) Update(ctx *gofr.Context, id int, prod *models.Product) (interface{}, error) {
+func (m *MockProductStorer) Update(ctx *gofr.Context, id int, prod *models.Product) (*models.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, id, prod)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(*models.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -149,10 +134,10 @@ func (m *MockBrandStorer) EXPECT() *MockBrandStorerMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockBrandStorer) Create(ctx *gofr.Context, brand models.Brand) (interface{}, error) {
+func (m *MockBrandStorer) Create(ctx *gofr.Context, brand models.Brand) (models.Brand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, brand)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(models.Brand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -179,10 +164,10 @@ func (mr *MockBrandStorerMockRecorder) Get(ctx, id interface{}) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockBrandStorer) Update(ctx *gofr.Context, id int, brand models.Brand) (interface{}, error) {
+func (m *MockBrandStorer) Update(ctx *gofr.Context, id int, brand models.Brand) (models.Brand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, id, brand)
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(models.Brand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

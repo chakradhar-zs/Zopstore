@@ -1,5 +1,6 @@
 package models
 
+// Product Structure Definition
 type Product struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`

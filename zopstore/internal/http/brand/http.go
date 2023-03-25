@@ -18,6 +18,7 @@ func New(s service.Brand) *Handler {
 	return &Handler{svc: s}
 }
 
+// Read handler takes gofr context and extracts id from url and calls GetBrand of service layer
 func (h *Handler) Read(ctx *gofr.Context) (interface{}, error) {
 	i := ctx.PathParam("id")
 
@@ -34,47 +35,59 @@ func (h *Handler) Read(ctx *gofr.Context) (interface{}, error) {
 	resp, err := h.svc.GetBrand(ctx, id)
 
 	if err != nil {
-		return models.Brand{}, errors.EntityNotFound{}
+		return models.Brand{}, errors.EntityNotFound{Entity: "brand"}
 	}
 
 	return resp, nil
 }
 
+// Create handler takes gofr context and extract  brand details from request body
+// Then calls CreateBrand of service layer which returns brand details and error if any
 func (h *Handler) Create(ctx *gofr.Context) (interface{}, error) {
 	var b models.Brand
 
-	_ = ctx.Bind(&b)
+	err := ctx.Bind(&b)
+
+	if err != nil {
+		return nil, errors.InvalidParam{Param: []string{"body"}}
+	}
 
 	resp, err := h.svc.CreateBrand(ctx, b)
 
 	if err != nil {
-		return 0, err
+		return models.Brand{}, err
 	}
 
 	return resp, nil
 }
 
+// Update handler takes gofr context and extract brand details from request body
+// Then calls UpdateBrand of service layer which returns brand details and error if any
 func (h *Handler) Update(ctx *gofr.Context) (interface{}, error) {
 	var b models.Brand
 
 	i := ctx.PathParam("id")
 
 	if i == "" {
-		return 0, errors.MissingParam{Param: []string{"id"}}
+		return models.Brand{}, errors.MissingParam{Param: []string{"id"}}
 	}
 
 	id, err := strconv.Atoi(i)
 
 	if err != nil {
-		return 0, errors.InvalidParam{Param: []string{"id"}}
+		return models.Brand{}, errors.InvalidParam{Param: []string{"id"}}
 	}
 
-	_ = ctx.Bind(&b)
+	err = ctx.Bind(&b)
+
+	if err != nil {
+		return nil, errors.InvalidParam{Param: []string{"body"}}
+	}
 
 	resp, err := h.svc.UpdateBrand(ctx, id, b)
 
 	if err != nil {
-		return 0, err
+		return models.Brand{}, err
 	}
 
 	return resp, nil

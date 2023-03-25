@@ -11,6 +11,7 @@ import (
 	"Day-19/internal/constants"
 )
 
+// TestMiddle is a test function which uses a mock handler to test Middle function
 func TestMiddle(t *testing.T) {
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	})
@@ -22,13 +23,13 @@ func TestMiddle(t *testing.T) {
 		path      string
 		expStatus int
 	}{
-		{"Success", http.MethodGet, "product-r", "/product", http.StatusOK},
-		{"Success", http.MethodPost, "product-w", "/product", http.StatusOK},
-		{"Fail", http.MethodPost, "product-r", "/product", http.StatusForbidden},
-		{"Fail", http.MethodPost, "brand-w", "/product", http.StatusForbidden},
-		{"Fail", http.MethodGet, "", "/product", http.StatusUnauthorized},
-		{"Fail", http.MethodGet, "product-w", "/product", http.StatusForbidden},
-		{"Fail", http.MethodPost, "brand-r", "/brand", http.StatusForbidden},
+		{"Success", http.MethodGet, "product-r", "/products", http.StatusOK},
+		{"Success", http.MethodPost, "product-w", "/products", http.StatusOK},
+		{"Fail", http.MethodPost, "product-r", "/products", http.StatusForbidden},
+		{"Fail", http.MethodPost, "brand-w", "/products", http.StatusForbidden},
+		{"Fail", http.MethodGet, "", "/products", http.StatusUnauthorized},
+		{"Fail", http.MethodGet, "product-w", "/products", http.StatusForbidden},
+		{"Fail", http.MethodPost, "brand-r", "/brands", http.StatusForbidden},
 	}
 
 	for i, val := range tests {
@@ -41,6 +42,7 @@ func TestMiddle(t *testing.T) {
 	}
 }
 
+// TestMiddleOrg is a test function which uses a mock handler to test MiddleOrg function
 func TestMiddleOrg(t *testing.T) {
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	})
@@ -52,9 +54,9 @@ func TestMiddleOrg(t *testing.T) {
 		path   string
 		expKey string
 	}{
-		{"Success", http.MethodPost, "zs", "/product", "zs"},
-		{"Success", http.MethodPost, "", "/product", ""},
-		{"Success", http.MethodGet, "zs", "/product", ""},
+		{"Success", http.MethodPost, "zs", "/products", "zs"},
+		{"Success", http.MethodPost, "", "/products", ""},
+		{"Success", http.MethodGet, "zs", "/products", ""},
 	}
 	for i, val := range tests {
 		w := httptest.NewRecorder()

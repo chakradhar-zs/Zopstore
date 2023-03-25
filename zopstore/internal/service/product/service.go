@@ -1,8 +1,6 @@
 package product
 
 import (
-	"reflect"
-
 	"developer.zopsmart.com/go/gofr/pkg/errors"
 
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
@@ -19,6 +17,7 @@ func New(storer store.ProductStorer) *Service {
 	return &Service{store: storer}
 }
 
+// GetProduct takes gofr context,id and brand as input and calls Get of store layer and returns product details and error
 func (s *Service) GetProduct(ctx *gofr.Context, i int, brand string) (models.Product, error) {
 	res, err := s.store.Get(ctx, i, brand)
 
@@ -29,6 +28,7 @@ func (s *Service) GetProduct(ctx *gofr.Context, i int, brand string) (models.Pro
 	return res, nil
 }
 
+// GetProductByNAme takes gofr context , name and brand as input and calls GetByName of store layer and returns array of products and error
 func (s *Service) GetProductByNAme(ctx *gofr.Context, name, brand string) ([]models.Product, error) {
 	res, err := s.store.GetByName(ctx, name, brand)
 
@@ -39,50 +39,42 @@ func (s *Service) GetProductByNAme(ctx *gofr.Context, name, brand string) ([]mod
 	return res, nil
 }
 
-func (s *Service) CreateProduct(ctx *gofr.Context, p *models.Product) (interface{}, error) {
-	x := *p
-	values := reflect.ValueOf(x)
-
-	for i := 0; i < values.NumField(); i++ {
-		if values.Field(i).Interface() == "" || values.Field(i).Interface() == 0 {
-			return 0, errors.MissingParam{Param: []string{"body"}}
-		}
+// CreateProduct takes gofr context and product details as input
+// Then checks for missing fields and calls Create of store layer
+// Returns product details affected and error
+func (s *Service) CreateProduct(ctx *gofr.Context, p *models.Product) (*models.Product, error) {
+	if isEmpty(p) {
+		return &models.Product{}, errors.MissingParam{Param: []string{"body"}}
 	}
 
-	res, _ := s.store.Create(ctx, p)
+	res, err := s.store.Create(ctx, p)
+
+	if err != nil {
+		return &models.Product{}, errors.EntityNotFound{Entity: "product"}
+	}
 
 	return res, nil
 }
 
-func (s *Service) UpdateProduct(ctx *gofr.Context, id int, p *models.Product) (interface{}, error) {
-	x := *p
-	values := reflect.ValueOf(x)
-
-	for i := 0; i < values.NumField(); i++ {
-		if values.Field(i).Interface() == "" || values.Field(i).Interface() == 0 {
-			return 0, errors.MissingParam{Param: []string{"body"}}
-		}
+// UpdateProduct takes gofr context, id and product structure as input
+// Then checks for missing fields and calls Update of store layer
+// Returns product details and error
+func (s *Service) UpdateProduct(ctx *gofr.Context, id int, p *models.Product) (*models.Product, error) {
+	if isEmpty(p) {
+		return &models.Product{}, errors.MissingParam{Param: []string{"body"}}
 	}
 
 	res, err := s.store.Update(ctx, id, p)
 
 	if err != nil {
-		return 0, err
+		return &models.Product{}, err
 	}
 
 	return res, nil
 }
 
-func (s *Service) DeleteProduct(ctx *gofr.Context, i int) (interface{}, error) {
-	res, err := s.store.Del(ctx, i)
-
-	if err != nil {
-		return 0, err
-	}
-
-	return res, nil
-}
-
+// GetAllProducts takes gofr context and brand as input
+// Then calls GetAll of store layer and returns a list of all products and error
 func (s *Service) GetAllProducts(ctx *gofr.Context, brand string) ([]models.Product, error) {
 	res, err := s.store.GetAll(ctx, brand)
 
@@ -91,4 +83,26 @@ func (s *Service) GetAllProducts(ctx *gofr.Context, brand string) ([]models.Prod
 	}
 
 	return res, nil
+}
+
+func isEmpty(b *models.Product) bool {
+	if b.ID == 0 {
+		return true
+	} else if b.Name == "" {
+		return true
+	} else if b.Description == "" {
+		return true
+	} else if b.Price == 0 {
+		return true
+	} else if b.Quantity == 0 {
+		return true
+	} else if b.Category == "" {
+		return true
+	} else if b.Brand.ID == 0 {
+		return true
+	} else if b.Status == "" {
+		return true
+	}
+
+	return false
 }
