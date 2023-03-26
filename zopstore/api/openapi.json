@@ -1,0 +1,754 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ZopStore - OpenAPI 3.0",
+    "description": "This is a online product store\nZop Store",
+    "version": "1.0.11"
+  },
+  "servers": [
+    {
+      "url": "https://localhost:8080"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Product",
+      "description": "Everything about  products in store"
+    },
+    {
+      "name": "Brand",
+      "description": "Everything about  brands in store"
+    }
+  ],
+  "paths": {
+    "/product/{id}": {
+      "put": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Update an existing product",
+        "description": "Update an existing product by Id",
+        "operationId": "updateProduct",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of Product to return",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "brand",
+            "in": "query",
+            "description": "Checking whether to send brand name or not",
+            "schema": {
+              "type": "string",
+              "default": false,
+              "enum": [
+                true,
+                false
+              ]
+            }
+          },
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "a key for authorization",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "product-w"
+              ]
+            }
+          },
+          {
+            "name": "X-ORG",
+            "in": "header",
+            "description": "a key for authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Update an existing product in the store",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InputProduct"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutputProductWithBrandName"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID provided"
+          },
+          "401": {
+            "description": "Unauthorised Request"
+          },
+          "403": {
+            "description": "Forbidden Request"
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "405": {
+            "description": "Method Not Allowed"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Retrieve a product from store",
+        "description": "Retrieve a  product from store",
+        "operationId": "getProduct",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of Product to return",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "brand",
+            "in": "query",
+            "description": "Checking whether to send brand name or not",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "a key for authorization",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "product-r"
+              ]
+            }
+          },
+          {
+            "name": "X-ORG",
+            "in": "header",
+            "description": "a key for authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutputProductWithBrandName"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID provided"
+          },
+          "401": {
+            "description": "Unauthorised Request"
+          },
+          "403": {
+            "description": "Forbidden Request"
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "405": {
+            "description": "Method Not Allowed"
+          }
+        }
+      }
+    },
+    "/product": {
+      "post": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Add a new product to the store",
+        "description": "Add a new product to the store",
+        "operationId": "createProduct",
+        "parameters": [
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "a key for authorization",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "product-w"
+              ]
+            }
+          },
+          {
+            "name": "X-ORG",
+            "in": "header",
+            "description": "a key for authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Create a new product in the store",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InputProduct"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutputProductWithBrandName"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorised Request"
+          },
+          "403": {
+            "description": "Forbidden Request"
+          },
+          "405": {
+            "description": "Method Not Allowed"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Gets all the products of the store",
+        "description": "Get all products",
+        "operationId": "getAllProducts",
+        "parameters": [
+          {
+            "name": "brand",
+            "in": "query",
+            "description": "Checking whether to send brand name or not",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Checking product name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "a key for authorization",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "product-r"
+              ]
+            }
+          },
+          {
+            "name": "X-ORG",
+            "in": "header",
+            "description": "a key for authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OutputProductWithBrandName"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised Request"
+          },
+          "403": {
+            "description": "Forbidden Request"
+          },
+          "405": {
+            "description": "Method Not Allowed"
+          }
+        }
+      }
+    },
+    "/brand/{id}": {
+      "put": {
+        "tags": [
+          "Brand"
+        ],
+        "summary": "Update an existing brand",
+        "description": "Update an existing brand by Id",
+        "operationId": "updateBrand",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of Brand to return",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "a key for authorization",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "brand-w"
+              ]
+            }
+          },
+          {
+            "name": "X-ORG",
+            "in": "header",
+            "description": "a key for authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Update an existing brand in the store",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InputBrand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutputBrand"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID provided"
+          },
+          "401": {
+            "description": "Unauthorised Request"
+          },
+          "403": {
+            "description": "Forbidden Request"
+          },
+          "404": {
+            "description": "Brand not found"
+          },
+          "405": {
+            "description": "Method Not Allowed"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Brand"
+        ],
+        "summary": "Retrieve a brand from store",
+        "description": "Retrieve a  brand from store",
+        "operationId": "getBrand",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of Brand to return",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "a key for authorization",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "brand-r"
+              ]
+            }
+          },
+          {
+            "name": "X-ORG",
+            "in": "header",
+            "description": "a key for authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutputBrand"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID provided"
+          },
+          "401": {
+            "description": "Unauthorised Request"
+          },
+          "403": {
+            "description": "Forbidden Request"
+          },
+          "404": {
+            "description": "Brand not found"
+          },
+          "405": {
+            "description": "Method Not Allowed"
+          }
+        }
+      }
+    },
+    "/brand": {
+      "post": {
+        "tags": [
+          "Brand"
+        ],
+        "summary": "Add a new brand to the store",
+        "description": "Add a new brand to the store",
+        "operationId": "createBrand",
+        "parameters": [
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "a key for authorization",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "brand-w"
+              ]
+            }
+          },
+          {
+            "name": "X-ORG",
+            "in": "header",
+            "description": "a key for authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Create a new brand in the store",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutputBrand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutputBrand"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised Request"
+          },
+          "403": {
+            "description": "Forbidden Request"
+          },
+          "405": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "InputProduct": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "format": "string",
+            "example": "sneakers"
+          },
+          "description": {
+            "type": "string",
+            "format": "string",
+            "example": "stylish"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int",
+            "example": 5000
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int",
+            "example": 2
+          },
+          "category": {
+            "type": "string",
+            "format": "string",
+            "example": "shoes"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int",
+                "example": 4
+              },
+              "name": {
+                "type": "string",
+                "format": "string",
+                "example": "Nike"
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "product Status",
+            "example": "available",
+            "enum": [
+              "available",
+              "out of stock",
+              "discontinued"
+            ]
+          }
+        }
+      },
+      "OutputProductWithBrandName": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "format": "string",
+            "example": "sneakers"
+          },
+          "description": {
+            "type": "string",
+            "format": "string",
+            "example": "stylish"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int",
+            "example": 5000
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int",
+            "example": 2
+          },
+          "category": {
+            "type": "string",
+            "format": "string",
+            "example": "shoes"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int",
+                "example": 4
+              },
+              "name": {
+                "type": "string",
+                "format": "string",
+                "example": "Nike"
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "product Status",
+            "example": "available",
+            "enum": [
+              "available",
+              "out of stock",
+              "discontinued"
+            ]
+          }
+        }
+      },
+      "OutputProductWithOutBrandName": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "format": "string",
+            "example": "sneakers"
+          },
+          "description": {
+            "type": "string",
+            "format": "string",
+            "example": "stylish"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int",
+            "example": 5000
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int",
+            "example": 2
+          },
+          "category": {
+            "type": "string",
+            "format": "string",
+            "example": "shoes"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int",
+                "example": 4
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "product Status",
+            "example": "available",
+            "enum": [
+              "available",
+              "out of stock",
+              "discontinued"
+            ]
+          }
+        }
+      },
+      "InputBrand": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "format": "string",
+            "example": "nike"
+          }
+        }
+      },
+      "OutputBrand": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "format": "string",
+            "example": "nike"
+          }
+        }
+      }
+    }
+  }
+}
