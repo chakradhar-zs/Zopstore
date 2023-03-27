@@ -81,11 +81,17 @@ func (s *Store) Create(ctx *gofr.Context, prod *models.Product) (*models.Product
 // Update takes gofr context,id and product details as input
 // Then updates the product in database and returns product details and error if any
 func (s *Store) Update(ctx *gofr.Context, id int, prod *models.Product) (*models.Product, error) {
-	_, err := ctx.DB().ExecContext(ctx,
+	resp, err := ctx.DB().ExecContext(ctx,
 		"update products set name=?,description=?,price=?,quantity=?,category=?,brand_id=?,status=? where id =?",
 		prod.Name, prod.Description, prod.Price, prod.Quantity, prod.Category, prod.Brand.ID, prod.Status, id)
 
 	if err != nil {
+		return &models.Product{}, errors.EntityNotFound{Entity: "product"}
+	}
+
+	row, _ := resp.RowsAffected()
+
+	if row == 0 {
 		return &models.Product{}, errors.EntityNotFound{Entity: "product"}
 	}
 

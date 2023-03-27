@@ -154,3 +154,44 @@ func TestUpdate(t *testing.T) {
 		assert.Equalf(t, val.expErr, err, "Test[%d] failed \n%s", i, val.desc)
 	}
 }
+
+func TestUpdateIvalidId(t *testing.T) {
+	ctx := gofr.NewContext(nil, nil, gofr.New())
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		ctx.Logger.Error("Error while opening a mock db connection")
+	}
+
+	ctx.DataStore = datastore.DataStore{ORM: db}
+	ctx.Context = context.Background()
+	tests := []struct {
+		desc    string
+		input1  int
+		input2  models.Brand
+		output  models.Brand
+		mockErr error
+		expErr  error
+	}{
+		{desc: "Fail",
+			input1:  99,
+			input2:  models.Brand{ID: 99, Name: "xyz"},
+			output:  models.Brand{},
+			mockErr: nil,
+			expErr:  errors.EntityNotFound{Entity: "brand"},
+		},
+	}
+
+	for i, val := range tests {
+		st := New()
+
+		mock.ExpectExec("update").
+			WithArgs(val.input2.Name, val.input1).
+			WillReturnResult(sqlmock.NewResult(int64(val.input1), 0)).
+			WillReturnError(val.mockErr)
+
+		out, err := st.Update(ctx, val.input1, val.input2)
+		assert.Equalf(t, val.output, out, "Test[%d] failed \n%s", i, val.desc)
+		assert.Equalf(t, val.expErr, err, "Test[%d] failed \n%s", i, val.desc)
+	}
+}

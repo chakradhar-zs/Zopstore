@@ -69,7 +69,7 @@ func (h *Handler) Create(c *gofr.Context) (interface{}, error) {
 	resp, err := h.svc.CreateProduct(c, prod)
 
 	if err != nil {
-		return &models.Product{}, err
+		return nil, err
 	}
 
 	resp.Name = strings.TrimPrefix(resp.Name, orgID+"_")
@@ -89,13 +89,13 @@ func (h *Handler) Update(c *gofr.Context) (interface{}, error) {
 	i := c.PathParam("id")
 
 	if i == "" {
-		return &models.Product{}, errors.MissingParam{Param: []string{"id"}}
+		return nil, errors.MissingParam{Param: []string{"id"}}
 	}
 
 	id, err := strconv.Atoi(i)
 
 	if err != nil {
-		return &models.Product{}, errors.InvalidParam{Param: []string{"id"}}
+		return nil, errors.InvalidParam{Param: []string{"id"}}
 	}
 
 	err = c.Bind(&prod)
@@ -111,7 +111,7 @@ func (h *Handler) Update(c *gofr.Context) (interface{}, error) {
 	resp, err := h.svc.UpdateProduct(c, id, &prod)
 
 	if err != nil {
-		return &models.Product{}, err
+		return nil, err
 	}
 
 	resp.Name = strings.TrimPrefix(resp.Name, orgID+"_")

@@ -204,6 +204,51 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
+func TestUpdateInvalidId(t *testing.T) {
+	ctx := gofr.NewContext(nil, nil, gofr.New())
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		ctx.Logger.Error("Error while opening a mock db connection")
+	}
+
+	tests := []struct {
+		desc    string
+		input1  int
+		input2  *models.Product
+		output  *models.Product
+		mockErr error
+		expErr  error
+	}{
+		{desc: "Fail",
+			input1: 1000,
+			input2: &models.Product{
+				ID: 1000, Name: "Maggi", Description: "yummy", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available",
+			},
+			output:  &models.Product{},
+			mockErr: nil,
+			expErr:  errors.EntityNotFound{Entity: "product"},
+		},
+	}
+
+	for _, val := range tests {
+		ctx.DataStore = datastore.DataStore{ORM: db}
+		ctx.Context = context.Background()
+
+		mock.ExpectExec("update ").
+			WithArgs(val.input2.Name, val.input2.Description, val.input2.Price, val.input2.Quantity,
+				val.input2.Category, val.input2.Brand.ID, val.input2.Status, val.input2.ID).
+			WillReturnResult(sqlmock.NewResult(1000, 0)).
+			WillReturnError(nil)
+
+		st := New()
+		out, err := st.Update(ctx, val.input1, val.input2)
+		assert.Equal(t, val.output, out, "TEST failed.")
+		assert.Equal(t, val.expErr, err, "TEST failed.")
+	}
+}
+
 // TestGetAll is a test function which uses sql mocks to test GetAll function
 func TestGetAll(t *testing.T) {
 	ctx := gofr.NewContext(nil, nil, gofr.New())

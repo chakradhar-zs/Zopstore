@@ -225,7 +225,7 @@ func TestWrite(t *testing.T) {
 		{desc: "Fail",
 			org:    "",
 			input:  models.Product{},
-			output: &models.Product{},
+			output: nil,
 			expErr: errors.MissingParam{Param: []string{"body"}},
 			calls: []*gomock.Call{
 				serviceMock.EXPECT().CreateProduct(gomock.AssignableToTypeOf(&gofr.Context{}), &models.Product{}).
@@ -296,7 +296,7 @@ func TestUpdate(t *testing.T) {
 			input1: "2",
 			org:    "",
 			input2: models.Product{},
-			output: &models.Product{},
+			output: nil,
 			expErr: errors.MissingParam{Param: []string{"body"}},
 			calls: []*gomock.Call{
 				serviceMock.EXPECT().UpdateProduct(gomock.AssignableToTypeOf(&gofr.Context{}), 2, &models.Product{}).
@@ -305,16 +305,16 @@ func TestUpdate(t *testing.T) {
 		{desc: "Fail",
 			input1: "abc",
 			org:    "",
-			input2: models.Product{},
-			output: &models.Product{},
+			input2: &models.Product{},
+			output: nil,
 			expErr: errors.InvalidParam{Param: []string{"id"}},
 			calls:  nil,
 		},
 		{desc: "Fail",
 			input1: "",
 			org:    "",
-			input2: models.Product{},
-			output: &models.Product{},
+			input2: &models.Product{},
+			output: nil,
 			expErr: errors.MissingParam{Param: []string{"id"}},
 			calls:  nil,
 		},

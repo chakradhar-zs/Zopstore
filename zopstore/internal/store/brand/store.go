@@ -42,10 +42,16 @@ func (s *Store) Create(ctx *gofr.Context, brand models.Brand) (models.Brand, err
 
 // Update takes gofr context, id and brand detailsas input and update brand details database and returns brand details and error if any
 func (s *Store) Update(ctx *gofr.Context, id int, brand models.Brand) (models.Brand, error) {
-	_, err := ctx.DB().ExecContext(ctx, "update brands set name=? where id=?", brand.Name, id)
+	resp, err := ctx.DB().ExecContext(ctx, "update brands set name=? where id=?", brand.Name, id)
 
 	if err != nil {
 		return models.Brand{}, errors.EntityNotFound{Entity: "brand", ID: "id"}
+	}
+
+	row, _ := resp.RowsAffected()
+
+	if row == 0 {
+		return models.Brand{}, errors.EntityNotFound{Entity: "brand"}
 	}
 
 	brand.ID = id
