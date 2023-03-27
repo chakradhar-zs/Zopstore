@@ -75,6 +75,15 @@ func (s *Store) Create(ctx *gofr.Context, prod *models.Product) (*models.Product
 		return &models.Product{}, errors.MissingParam{Param: []string{"body"}}
 	}
 
+	if prod.Brand.Name == "" {
+		row := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", prod.Brand.ID)
+
+		err := row.Scan(&prod.Brand.Name)
+		if err != nil {
+			return &models.Product{}, errors.EntityNotFound{Entity: "Brand Name"}
+		}
+	}
+
 	return prod, nil
 }
 

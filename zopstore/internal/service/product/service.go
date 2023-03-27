@@ -43,8 +43,13 @@ func (s *Service) GetProductByNAme(ctx *gofr.Context, name, brand string) ([]mod
 // Then checks for missing fields and calls Create of store layer
 // Returns product details affected and error
 func (s *Service) CreateProduct(ctx *gofr.Context, p *models.Product) (*models.Product, error) {
-	if isEmpty(p) || p.ID == 0 {
-		return &models.Product{}, errors.MissingParam{Param: []string{"body"}}
+	err := isEmpty(p)
+	if err != nil {
+		return &models.Product{}, err
+	}
+
+	if p.ID == 0 {
+		return &models.Product{}, errors.MissingParam{Param: []string{"id"}}
 	}
 
 	res, err := s.store.Create(ctx, p)
@@ -60,8 +65,9 @@ func (s *Service) CreateProduct(ctx *gofr.Context, p *models.Product) (*models.P
 // Then checks for missing fields and calls Update of store layer
 // Returns product details and error
 func (s *Service) UpdateProduct(ctx *gofr.Context, id int, p *models.Product) (*models.Product, error) {
-	if isEmpty(p) {
-		return &models.Product{}, errors.MissingParam{Param: []string{"body"}}
+	err := isEmpty(p)
+	if err != nil {
+		return &models.Product{}, err
 	}
 
 	res, err := s.store.Update(ctx, id, p)
@@ -85,22 +91,22 @@ func (s *Service) GetAllProducts(ctx *gofr.Context, brand string) ([]models.Prod
 	return res, nil
 }
 
-func isEmpty(b *models.Product) bool {
+func isEmpty(b *models.Product) error {
 	if b.Name == "" {
-		return true
+		return errors.MissingParam{Param: []string{"name"}}
 	} else if b.Description == "" {
-		return true
+		return errors.MissingParam{Param: []string{"description"}}
 	} else if b.Price == 0 {
-		return true
+		return errors.MissingParam{Param: []string{"price"}}
 	} else if b.Quantity == 0 {
-		return true
+		return errors.MissingParam{Param: []string{"quantity"}}
 	} else if b.Category == "" {
-		return true
+		return errors.MissingParam{Param: []string{"category"}}
 	} else if b.Brand.ID == 0 {
-		return true
+		return errors.MissingParam{Param: []string{"Brand Id"}}
 	} else if b.Status == "" {
-		return true
+		return errors.MissingParam{Param: []string{"Status"}}
 	}
 
-	return false
+	return nil
 }

@@ -104,11 +104,11 @@ func TestCreate(t *testing.T) {
 		{desc: "Success",
 			input: &models.Product{
 				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
-				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available",
+				Brand: models.Brand{ID: 1, Name: "xyx"}, Status: "Available",
 			},
 			output: &models.Product{
 				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
-				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available",
+				Brand: models.Brand{ID: 1, Name: "xyx"}, Status: "Available",
 			},
 			mockErr: nil,
 			expErr:  nil,
@@ -130,6 +130,78 @@ func TestCreate(t *testing.T) {
 				val.input.Category, val.input.Brand.ID, val.input.Status).
 			WillReturnResult(sqlmock.NewResult(6, 1)).
 			WillReturnError(val.mockErr)
+
+		st := New()
+		out, err := st.Create(ctx, val.input)
+		assert.Equal(t, val.output, out, "TEST failed.")
+		assert.Equal(t, val.expErr, err, "TEST failed.")
+	}
+}
+
+func TestCreateWithoutBrand(t *testing.T) {
+	ctx := gofr.NewContext(nil, nil, gofr.New())
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		ctx.Logger.Error("Error while opening a mock db connection")
+	}
+
+	row := sqlmock.NewRows([]string{"bname"}).
+		AddRow("maggi")
+	row1 := sqlmock.NewRows([]string{"bname"}).
+		AddRow(1)
+
+	tests := []struct {
+		desc   string
+		input  *models.Product
+		output *models.Product
+		expErr error
+		query1 *sqlmock.ExpectedExec
+		query2 *sqlmock.ExpectedQuery
+	}{
+		{desc: "Success",
+			input: &models.Product{
+				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1}, Status: "Available",
+			},
+			output: &models.Product{
+				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1, Name: "maggi"}, Status: "Available",
+			},
+			expErr: nil,
+			query1: mock.ExpectExec("insert into").
+				WithArgs(6, "maggi", "tasty", 50, 3, "noodles", 1, "Available").
+				WillReturnResult(sqlmock.NewResult(6, 1)).
+				WillReturnError(nil),
+			query2: mock.ExpectQuery("select").
+				WithArgs(1).
+				WillReturnRows(row).
+				WillReturnError(nil),
+		},
+		{desc: "Fail",
+			input: &models.Product{
+				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
+				Brand: models.Brand{ID: 1}, Status: "Available",
+			},
+			output: &models.Product{},
+			expErr: errors.EntityNotFound{Entity: "Brand Name"},
+			query1: mock.ExpectExec("insert into").
+				WithArgs(6, "maggi", "tasty", 50, 3, "noodles", 1, "Available").
+				WillReturnResult(sqlmock.NewResult(6, 1)).
+				WillReturnError(nil),
+			query2: mock.ExpectQuery("select").
+				WithArgs(1).
+				WillReturnRows(row1).
+				WillReturnError(errors.EntityNotFound{Entity: "Brand Name"}),
+		},
+	}
+
+	for _, val := range tests {
+		ctx.DataStore = datastore.DataStore{ORM: db}
+		ctx.Context = context.Background()
+
+		_ = val.query1
+		_ = val.query2
 
 		st := New()
 		out, err := st.Create(ctx, val.input)
