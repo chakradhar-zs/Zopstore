@@ -1,10 +1,6 @@
 package main
 
 import (
-	"Day-19/internal/http/brand"
-	"Day-19/internal/http/product"
-	"Day-19/middleware"
-
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
 	productstore "Day-19/internal/store/product"
@@ -13,6 +9,10 @@ import (
 
 	brandservice "Day-19/internal/service/brand"
 	brandstore "Day-19/internal/store/brand"
+
+	"Day-19/internal/http/brand"
+	"Day-19/internal/http/product"
+	"Day-19/middleware"
 )
 
 // Dependency injection for product and brand

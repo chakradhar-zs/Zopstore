@@ -31,7 +31,7 @@ func (svc *Service) GetBrand(ctx *gofr.Context, id int) (models.Brand, error) {
 // CreateBrand takes gofr context and brand structure as input
 // Then checks for missing fields and calls Create of store layer which returns brand details and error if any
 func (svc *Service) CreateBrand(ctx *gofr.Context, brand models.Brand) (models.Brand, error) {
-	if isEmpty(brand) {
+	if isEmpty(brand) || brand.ID == 0 {
 		return models.Brand{}, errors.MissingParam{Param: []string{"body"}}
 	}
 
@@ -61,13 +61,5 @@ func (svc *Service) UpdateBrand(ctx *gofr.Context, id int, brand models.Brand) (
 }
 
 func isEmpty(b models.Brand) bool {
-	if b.ID == 0 {
-		return true
-	}
-
-	if b.Name == "" {
-		return true
-	}
-
-	return false
+	return b.Name == ""
 }

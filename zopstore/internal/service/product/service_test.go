@@ -151,7 +151,7 @@ func TestCreateProduct(t *testing.T) {
 				ID: 6, Name: "maggi", Description: "tasty", Price: 50, Quantity: 3, Category: "noodles",
 				Brand: models.Brand{ID: 1, Name: ""}, Status: "Available"},
 			output: &models.Product{},
-			expErr: errors.EntityNotFound{Entity: "product"},
+			expErr: errors.MissingParam{Param: []string{"body"}},
 			Call: []*gomock.Call{
 				storeMock.EXPECT().
 					Create(gomock.AssignableToTypeOf(&gofr.Context{}), &models.Product{

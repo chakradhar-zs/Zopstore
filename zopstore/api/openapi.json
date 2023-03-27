@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://localhost:8080"
+      "url": "http://localhost:8080"
     }
   ],
   "tags": [
@@ -21,7 +21,7 @@
     }
   ],
   "paths": {
-    "/product/{id}": {
+    "/products/{id}": {
       "put": {
         "tags": [
           "Product"
@@ -187,7 +187,7 @@
         }
       }
     },
-    "/product": {
+    "/products": {
       "post": {
         "tags": [
           "Product"
@@ -324,7 +324,7 @@
         }
       }
     },
-    "/brand/{id}": {
+    "/brands/{id}": {
       "put": {
         "tags": [
           "Brand"
@@ -469,7 +469,7 @@
         }
       }
     },
-    "/brand": {
+    "/brands": {
       "post": {
         "tags": [
           "Brand"

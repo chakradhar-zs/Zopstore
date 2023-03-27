@@ -43,14 +43,14 @@ func (s *Service) GetProductByNAme(ctx *gofr.Context, name, brand string) ([]mod
 // Then checks for missing fields and calls Create of store layer
 // Returns product details affected and error
 func (s *Service) CreateProduct(ctx *gofr.Context, p *models.Product) (*models.Product, error) {
-	if isEmpty(p) {
+	if isEmpty(p) || p.ID == 0 {
 		return &models.Product{}, errors.MissingParam{Param: []string{"body"}}
 	}
 
 	res, err := s.store.Create(ctx, p)
 
 	if err != nil {
-		return &models.Product{}, errors.EntityNotFound{Entity: "product"}
+		return &models.Product{}, errors.MissingParam{Param: []string{"body"}}
 	}
 
 	return res, nil
@@ -86,9 +86,7 @@ func (s *Service) GetAllProducts(ctx *gofr.Context, brand string) ([]models.Prod
 }
 
 func isEmpty(b *models.Product) bool {
-	if b.ID == 0 {
-		return true
-	} else if b.Name == "" {
+	if b.Name == "" {
 		return true
 	} else if b.Description == "" {
 		return true
