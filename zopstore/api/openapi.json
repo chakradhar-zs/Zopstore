@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "ZopStore - OpenAPI 3.0",
+    "title": "zopStore - OpenAPI 3.0",
     "description": "This is a online product store\nZop Store",
     "version": "1.0.11"
   },
