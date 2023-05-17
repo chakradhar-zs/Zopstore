@@ -1,8 +1,11 @@
 package product
 
 import (
+	"Day-19/internal/constants"
 	"developer.zopsmart.com/go/gofr/pkg/errors"
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
+	"fmt"
+	"strings"
 
 	"Day-19/internal/models"
 )
@@ -21,11 +24,14 @@ const val = "true"
 func (s *Store) Get(ctx *gofr.Context, id int, brand string) (models.Product, error) {
 	var p models.Product
 
+	org := ctx.Param("organization")
+	fmt.Println(org)
+
 	resp := ctx.DB().QueryRowContext(ctx, "select products.id,products.name,products.description,products.price,"+
 		"products.quantity,products.category,brands.id,brands.name,products.status "+
 		"from products join brands on products.brand_id=brands.id where products.id=?", id)
-	err := resp.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Quantity, &p.Category, &p.Brand.ID, &p.Brand.Name, &p.Status)
 
+	err := resp.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Quantity, &p.Category, &p.Brand.ID, &p.Brand.Name, &p.Status)
 	if err != nil {
 		return models.Product{}, errors.EntityNotFound{Entity: "product"}
 	}
@@ -34,6 +40,8 @@ func (s *Store) Get(ctx *gofr.Context, id int, brand string) (models.Product, er
 		p.Brand.Name = ""
 	}
 
+	p.Name = strings.TrimPrefix(p.Name, org+"_")
+
 	return p, nil
 }
 
@@ -41,6 +49,8 @@ func (s *Store) Get(ctx *gofr.Context, id int, brand string) (models.Product, er
 // Then query the database and returns list of products with brand name based on brand value and error if any
 func (s *Store) GetByName(ctx *gofr.Context, name, brand string) ([]models.Product, error) {
 	res := []models.Product{}
+
+	org := ctx.Param("organization")
 
 	resp, _ := ctx.DB().QueryContext(ctx,
 		"select products.id,products.name,products.description,products.price,"+
@@ -59,6 +69,7 @@ func (s *Store) GetByName(ctx *gofr.Context, name, brand string) ([]models.Produ
 			p.Brand.Name = ""
 		}
 
+		p.Name = strings.TrimPrefix(p.Name, org+"_")
 		res = append(res, p)
 	}
 
@@ -68,6 +79,9 @@ func (s *Store) GetByName(ctx *gofr.Context, name, brand string) ([]models.Produ
 // Create takes gofr context and product details as input
 // Then insert into database and returns product details and error if any
 func (s *Store) Create(ctx *gofr.Context, prod *models.Product) (*models.Product, error) {
+	org := ctx.Context.Value(constants.CtxValue)
+	orgID := fmt.Sprint(org)
+
 	_, err := ctx.DB().ExecContext(ctx, "insert into products values(?,?,?,?,?,?,?,?)",
 		prod.ID, prod.Name, prod.Description, prod.Price, prod.Quantity, prod.Category, prod.Brand.ID, prod.Status)
 
@@ -75,14 +89,14 @@ func (s *Store) Create(ctx *gofr.Context, prod *models.Product) (*models.Product
 		return &models.Product{}, errors.MissingParam{Param: []string{"body"}}
 	}
 
-	if prod.Brand.Name == "" {
-		row := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", prod.Brand.ID)
+	row := ctx.DB().QueryRowContext(ctx, "select name from brands where id=?", prod.Brand.ID)
 
-		err := row.Scan(&prod.Brand.Name)
-		if err != nil {
-			return &models.Product{}, errors.EntityNotFound{Entity: "Brand Name"}
-		}
+	err = row.Scan(&prod.Brand.Name)
+	if err != nil {
+		return &models.Product{}, errors.EntityNotFound{Entity: "Brand Name"}
 	}
+
+	prod.Name = strings.TrimPrefix(prod.Name, orgID+"_")
 
 	return prod, nil
 }
@@ -90,6 +104,9 @@ func (s *Store) Create(ctx *gofr.Context, prod *models.Product) (*models.Product
 // Update takes gofr context,id and product details as input
 // Then updates the product in database and returns product details and error if any
 func (s *Store) Update(ctx *gofr.Context, id int, prod *models.Product) (*models.Product, error) {
+	org := ctx.Context.Value(constants.CtxValue)
+	orgID := fmt.Sprint(org)
+
 	resp, err := ctx.DB().ExecContext(ctx,
 		"update products set name=?,description=?,price=?,quantity=?,category=?,brand_id=?,status=? where id =?",
 		prod.Name, prod.Description, prod.Price, prod.Quantity, prod.Category, prod.Brand.ID, prod.Status, id)
@@ -105,6 +122,7 @@ func (s *Store) Update(ctx *gofr.Context, id int, prod *models.Product) (*models
 	}
 
 	prod.ID = id
+	prod.Name = strings.TrimPrefix(prod.Name, orgID+"_")
 
 	return prod, nil
 }
@@ -113,6 +131,8 @@ func (s *Store) Update(ctx *gofr.Context, id int, prod *models.Product) (*models
 // Then returns list of all products with brand name based on brand and error if any
 func (s *Store) GetAll(ctx *gofr.Context, brand string) ([]models.Product, error) {
 	res := []models.Product{}
+
+	org := ctx.Param("organization")
 
 	resp, err := ctx.DB().QueryContext(ctx, "select products.id,products.name,products.description,products.price,"+
 		"products.quantity,products.category,brands.id,brands.name,products.status "+
@@ -131,6 +151,7 @@ func (s *Store) GetAll(ctx *gofr.Context, brand string) ([]models.Product, error
 			prod.Brand.Name = ""
 		}
 
+		prod.Name = strings.TrimPrefix(prod.Name, org+"_")
 		res = append(res, prod)
 	}
 

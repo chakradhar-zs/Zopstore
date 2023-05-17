@@ -21,7 +21,6 @@ func (s *Store) Get(ctx *gofr.Context, id int) (models.Brand, error) {
 	resp := ctx.DB().QueryRowContext(ctx, "select id,name from brands where id=?", id)
 
 	err := resp.Scan(&b.ID, &b.Name)
-
 	if err != nil {
 		return models.Brand{}, errors.EntityNotFound{Entity: "brand", ID: "id"}
 	}
@@ -32,9 +31,8 @@ func (s *Store) Get(ctx *gofr.Context, id int) (models.Brand, error) {
 // Create takes gofr context, brand details as input and insert in database and returns brand details and error if any
 func (s *Store) Create(ctx *gofr.Context, brand models.Brand) (models.Brand, error) {
 	_, err := ctx.DB().ExecContext(ctx, "insert into brands values(?,?)", brand.ID, brand.Name)
-
 	if err != nil {
-		return models.Brand{}, errors.MissingParam{Param: []string{"body"}}
+		return models.Brand{}, err
 	}
 
 	return brand, nil
@@ -43,9 +41,8 @@ func (s *Store) Create(ctx *gofr.Context, brand models.Brand) (models.Brand, err
 // Update takes gofr context, id and brand detailsas input and update brand details database and returns brand details and error if any
 func (s *Store) Update(ctx *gofr.Context, id int, brand models.Brand) (models.Brand, error) {
 	resp, err := ctx.DB().ExecContext(ctx, "update brands set name=? where id=?", brand.Name, id)
-
 	if err != nil {
-		return models.Brand{}, errors.EntityNotFound{Entity: "brand", ID: "id"}
+		return models.Brand{}, err
 	}
 
 	row, _ := resp.RowsAffected()

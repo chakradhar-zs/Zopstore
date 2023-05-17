@@ -1,12 +1,10 @@
 package product
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
 	"developer.zopsmart.com/go/gofr/pkg/errors"
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
+	"fmt"
+	"strconv"
 
 	"Day-19/internal/constants"
 	"Day-19/internal/models"
@@ -25,7 +23,8 @@ func New(s service.Product) *Handler {
 func (h *Handler) Read(c *gofr.Context) (interface{}, error) {
 	i := c.PathParam("id")
 	brand := c.Param("brand")
-	org := c.Param("organization")
+	//org := c.Param("organization")
+	//fmt.Println(org)
 
 	if i == "" {
 		return nil, errors.MissingParam{Param: []string{"id"}}
@@ -42,8 +41,6 @@ func (h *Handler) Read(c *gofr.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	resp.Name = strings.TrimPrefix(resp.Name, org+"_")
 
 	return resp, nil
 }
@@ -71,8 +68,6 @@ func (h *Handler) Create(c *gofr.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	resp.Name = strings.TrimPrefix(resp.Name, orgID+"_")
 
 	return resp, nil
 }
@@ -114,33 +109,23 @@ func (h *Handler) Update(c *gofr.Context) (interface{}, error) {
 		return nil, err
 	}
 
-	resp.Name = strings.TrimPrefix(resp.Name, orgID+"_")
-
 	return resp, nil
 }
 
 // Index handler takes gofr context calls GetProductByName and GetAllProducts of service layer based on url of request
 func (h *Handler) Index(ctx *gofr.Context) (interface{}, error) {
 	brand := ctx.Param("brand")
-	org := ctx.Param("organization")
 	name := ctx.Param("name")
+	org := ctx.Param("organization")
 
 	if org != "" && name != "" {
 		name = org + "_" + name
 		resp, _ := h.svc.GetProductByNAme(ctx, name, brand)
 
-		for i := range resp {
-			resp[i].Name = strings.TrimPrefix(resp[i].Name, org+"_")
-		}
-
 		return resp, nil
 	}
 
 	resp, err := h.svc.GetAllProducts(ctx, brand)
-
-	for i := range resp {
-		resp[i].Name = strings.TrimPrefix(resp[i].Name, org+"_")
-	}
 
 	if err != nil {
 		return nil, err

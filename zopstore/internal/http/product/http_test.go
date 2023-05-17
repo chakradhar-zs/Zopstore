@@ -369,7 +369,7 @@ func TestIndex(t *testing.T) {
 			path: "/product/?brand=true",
 			output: []models.Product{{
 				ID:          3,
-				Name:        "sneaker shoes",
+				Name:        "zs_sneaker shoes",
 				Description: "stylish",
 				Price:       1000,
 				Quantity:    3,

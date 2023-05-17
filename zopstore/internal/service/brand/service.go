@@ -2,7 +2,6 @@ package brand
 
 import (
 	"developer.zopsmart.com/go/gofr/pkg/errors"
-
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 
 	"Day-19/internal/models"
@@ -20,7 +19,6 @@ func New(storer store.BrandStorer) *Service {
 // GetBrand function takes id and gofr context as input and calls Get of store layer
 func (svc *Service) GetBrand(ctx *gofr.Context, id int) (models.Brand, error) {
 	res, err := svc.store.Get(ctx, id)
-
 	if err != nil {
 		return models.Brand{}, err
 	}
@@ -41,9 +39,8 @@ func (svc *Service) CreateBrand(ctx *gofr.Context, brand models.Brand) (models.B
 	}
 
 	res, err := svc.store.Create(ctx, brand)
-
 	if err != nil {
-		return models.Brand{}, errors.MissingParam{Param: []string{"body"}}
+		return models.Brand{}, err
 	}
 
 	return res, nil

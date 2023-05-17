@@ -1,12 +1,17 @@
 package product
 
 import (
+	"Day-19/internal/constants"
 	"context"
+	"developer.zopsmart.com/go/gofr/pkg/gofr/request"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"developer.zopsmart.com/go/gofr/pkg/datastore"
 	"developer.zopsmart.com/go/gofr/pkg/errors"
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
@@ -70,6 +75,12 @@ func TestGet(t *testing.T) {
 		},
 	}
 	for _, val := range tests {
+		ctx := context.WithValue(context.Background(), constants.CtxValue, "zs")
+		r := httptest.NewRequest(http.MethodPost, "/", nil)
+		r = r.WithContext(ctx)
+		req := request.NewHTTPRequest(r)
+		c := gofr.NewContext(nil, req, gofr.New())
+		c.Context = r.Context()
 		st := New()
 		row := mock.NewRows([]string{"id", "name", "description", "price", "quantity", "category", "brand_id", "bname", "status"}).
 			AddRow(val.output.ID, val.output.Name, val.output.Description, val.output.Price,
@@ -79,7 +90,7 @@ func TestGet(t *testing.T) {
 			WillReturnRows(row).
 			WillReturnError(val.mockErr)
 
-		out, err := st.Get(ctx, val.input, val.input2)
+		out, err := st.Get(c, val.input, val.input2)
 		assert.Equal(t, val.output, out, "TEST failed.")
 		assert.Equal(t, val.expErr, err, "TEST failed.")
 	}
@@ -130,6 +141,10 @@ func TestCreate(t *testing.T) {
 				val.input.Category, val.input.Brand.ID, val.input.Status).
 			WillReturnResult(sqlmock.NewResult(6, 1)).
 			WillReturnError(val.mockErr)
+		mock.ExpectQuery("select").
+			WithArgs(1).
+			WillReturnRows(sqlmock.NewRows([]string{"bname"}).AddRow("xyx")).
+			WillReturnError(nil)
 
 		st := New()
 		out, err := st.Create(ctx, val.input)

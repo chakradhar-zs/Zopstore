@@ -1,0 +1,10 @@
+FROM ubuntu:latest
+
+RUN mkdir -p /src/build
+WORKDIR  /src/build
+
+COPY ./main /main
+COPY /configs /configs
+
+EXPOSE 9000
+CMD ["/main"]

@@ -21,21 +21,18 @@ func New(s service.Brand) *Handler {
 // Read handler takes gofr context and extracts id from url and calls GetBrand of service layer
 func (h *Handler) Read(ctx *gofr.Context) (interface{}, error) {
 	i := ctx.PathParam("id")
-
 	if i == "" {
 		return nil, errors.MissingParam{Param: []string{"id"}}
 	}
 
 	id, err := strconv.Atoi(i)
-
 	if err != nil {
 		return nil, errors.InvalidParam{Param: []string{"id"}}
 	}
 
 	resp, err := h.svc.GetBrand(ctx, id)
-
 	if err != nil {
-		return nil, errors.EntityNotFound{Entity: "brand"}
+		return nil, err
 	}
 
 	return resp, nil
@@ -47,13 +44,11 @@ func (h *Handler) Create(ctx *gofr.Context) (interface{}, error) {
 	var b models.Brand
 
 	err := ctx.Bind(&b)
-
 	if err != nil {
 		return nil, errors.InvalidParam{Param: []string{"body"}}
 	}
 
 	resp, err := h.svc.CreateBrand(ctx, b)
-
 	if err != nil {
 		return nil, err
 	}
@@ -73,19 +68,16 @@ func (h *Handler) Update(ctx *gofr.Context) (interface{}, error) {
 	}
 
 	id, err := strconv.Atoi(i)
-
 	if err != nil {
 		return nil, errors.InvalidParam{Param: []string{"id"}}
 	}
 
 	err = ctx.Bind(&b)
-
 	if err != nil {
 		return nil, errors.InvalidParam{Param: []string{"body"}}
 	}
 
 	resp, err := h.svc.UpdateBrand(ctx, id, b)
-
 	if err != nil {
 		return nil, err
 	}
